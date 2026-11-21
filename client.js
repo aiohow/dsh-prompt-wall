@@ -347,7 +347,7 @@ window.__ModuleLoader__.load({
 
       const toggleFav = async () => {
         if (!entry) return;
-        try { await call('fav', { code }); setEntry({ ...entry, fav: !entry.fav }); onChanged && onChanged(); }
+        try { const r = await call('fav', { code }); setEntry({ ...entry, fav: r.fav }); onChanged && onChanged(code, r.fav); }
         catch (e) { setError(e.message || String(e)); }
       };
 
@@ -476,8 +476,15 @@ window.__ModuleLoader__.load({
 
       const toggleFav = async (item) => {
         const r = await call('fav', { code: item.code });
+        // Patch in place. Never reload the list here: a reload resets paging
+        // to page 1 and the wall jumps to the top. In favorites-only view an
+        // unfavorited card stays put (star off) until the view is re-entered.
         setState((s) => ({ ...s, items: s.items.map((it) => it.code === item.code ? { ...it, fav: r.fav } : it) }));
       };
+
+      const patchFav = React.useCallback((code, fav) => {
+        setState((s) => ({ ...s, items: s.items.map((it) => it.code === code ? { ...it, fav } : it) }));
+      }, []);
 
       // Scroll memory per view: toggling favorites-only must not teleport the
       // wall. Leaving a view stores its scrollTop; entering restores its own,
@@ -531,13 +538,13 @@ window.__ModuleLoader__.load({
             cats.map((c) => h('option', { key: c.name, value: c.name }, `${c.name} (${c.count})`))),
           h('button', { className: 'pw-btn', 'aria-pressed': onlyFav ? 'true' : 'false',
             onClick: toggleOnlyFav }, t('filter.fav')),
-          h('span', { className: 'pw-count' }, state.random ? t('inspire.badge')
-            : state.status === 'error' ? ''
-            : t('count.n').replace('{n}', state.total) + (state.items.length < state.total ? ` · ${state.items.length}/${state.total}` : '')),
           h('div', { className: 'pw-bar-right' },
             h('button', { className: 'pw-btn', onClick: inspire }, '✦ ' + t('inspire')),
             h('button', { className: 'pw-btn', 'aria-pressed': showSettings ? 'true' : 'false',
               onClick: () => setShowSettings((v) => !v) }, t('settings')),
+            h('span', { className: 'pw-count' }, state.random ? t('inspire.badge')
+              : state.status === 'error' ? ''
+              : t('count.n').replace('{n}', state.total) + (state.items.length < state.total ? ` · ${state.items.length}/${state.total}` : '')),
             h('button', { className: 'pw-btn', 'aria-pressed': view === 'help' ? 'true' : 'false',
               onClick: () => setView((v) => (v === 'help' ? 'wall' : 'help')) }, '? ' + t('help'))),
           showSettings && h('div', { className: 'pw-pop' },
@@ -556,7 +563,7 @@ window.__ModuleLoader__.load({
         view === 'wall' && state.status === 'ready' && !state.random && state.items.length < state.total
           ? h('div', { className: 'pw-count', style: { textAlign: 'center', padding: '0 0 16px' } }, loadingMore ? t('more.loading') : '')
           : null,
-        open && h(Detail, { code: open, onClose: () => setOpen(null), onChanged: load }));
+        open && h(Detail, { code: open, onClose: () => setOpen(null), onChanged: patchFav }));
     }
 
     return {
