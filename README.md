@@ -1,5 +1,8 @@
 # dsh-prompt-wall
 
+[![License](https://img.shields.io/badge/license-see%20LICENSE-blue.svg)](LICENSE)
+![Templates](https://img.shields.io/badge/templates-1077-blue.svg)
+
 A prompt-wall plugin for DeepSeek Harness (DSH):
 1077 image-generation prompt templates with preview thumbnails, browsable as a
 card wall in the sidebar, searchable, favoritable, and wired to agent tools
@@ -77,3 +80,7 @@ The templates are community-collected prompts; their quality and suitability
 for your model are your call. This plugin makes no warranty about generation
 results. Preview thumbnails are resized from upstream example outputs and do
 not guarantee what your generation will look like.
+
+An independent community project, not affiliated with or endorsed by OpenAI,
+Google, or any model vendor. GPT, ChatGPT, Nano Banana and other names are
+trademarks of their respective owners.

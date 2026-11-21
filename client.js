@@ -164,6 +164,7 @@ window.__ModuleLoader__.load({
       'help.aboutt': '关于与合规',
       'help.license': '插件代码采用 MIT 许可（见安装目录 LICENSE）。模板数据与例图不属于 MIT：来自 10 个上游仓库，各自遵循其原始许可（MIT / Apache-2.0 / CC BY 4.0 / CC0 / 仓库署名声明），来源与条款见 UPSTREAMS.md 与 licenses/upstream/；二次分发时请按对应上游许可执行。',
       'help.disclaimer': '模板为社区收集，未逐一验证；生成效果取决于你的模型与参数，本插件不对输出质量作任何明示或暗示的保证。例图为上游生成结果的缩略图，仅供风格参考，不代表你的出图效果。',
+      'help.nonaffil': '本插件为独立社区项目，与 OpenAI、Google 及任何模型厂商无隶属或背书关系；GPT、ChatGPT、Nano Banana 等名称与商标归各自所有者。',
       'help.note': '所有模板与收藏都存在本机，不出网。',
       'more.loading': '加载更多…',
     };
@@ -211,6 +212,7 @@ window.__ModuleLoader__.load({
       'help.aboutt': 'About & compliance',
       'help.license': 'Plugin code is MIT-licensed (see LICENSE in the install directory). Template data and thumbnails are not MIT: they come from 10 upstream repositories under their own licenses (MIT / Apache-2.0 / CC BY 4.0 / CC0 / per-repo notices); see UPSTREAMS.md and licenses/upstream/ and follow the matching upstream terms when redistributing.',
       'help.disclaimer': 'Templates are community-collected and not individually verified. Generation results depend on your model and parameters; this plugin makes no warranties of any kind about output quality. Preview thumbnails are resized upstream outputs shown for style reference only.',
+      'help.nonaffil': 'An independent community project, not affiliated with or endorsed by OpenAI, Google, or any model vendor; GPT, ChatGPT, Nano Banana and other names are trademarks of their respective owners.',
       'help.note': 'Templates and favorites stay on this machine. Zero network.',
       'more.loading': 'Loading more…',
     };
@@ -402,6 +404,7 @@ window.__ModuleLoader__.load({
           h('div', { className: 'pw-label' }, t('help.aboutt')),
           h('p', null, t('help.license')),
           h('p', null, t('help.disclaimer')),
+          h('p', null, t('help.nonaffil')),
           h('p', null, t('help.note'))),
         h('button', { className: 'pw-btn', onClick: onBack, style: { alignSelf: 'flex-start', marginTop: 6 } }, '← ' + t('help.back')));
     }
