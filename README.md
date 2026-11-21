@@ -50,7 +50,7 @@ example images.
 thumbnails are **not** MIT — they remain under their respective upstream
 licenses (MIT / Apache-2.0 / CC BY 4.0 / CC0 / per-repo attribution). See
 [`UPSTREAMS.md`](UPSTREAMS.md) and [`licenses/upstream/`](licenses/upstream/)
-for the per-source terms and attribution notices. One upstream (库2) claims
+for the per-source terms and attribution notices. One upstream (lib2) claims
 MIT but its LICENSE file 404s, so its entries are not distributed here.
 
 ## Install
@@ -84,3 +84,9 @@ not guarantee what your generation will look like.
 An independent community project, not affiliated with or endorsed by OpenAI,
 Google, or any model vendor. GPT, ChatGPT, Nano Banana and other names are
 trademarks of their respective owners.
+
+## License
+
+Plugin code is MIT-licensed; template data and thumbnails stay under their
+upstream licenses as described above. Read `LICENSE` and `UPSTREAMS.md` before
+redistributing anything from this repository.
