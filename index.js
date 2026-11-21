@@ -1,7 +1,7 @@
 /**
  * dsh-prompt-wall — image-prompt template wall, host half.
  *
- * Ships the curated 1126-entry prompt gallery (data/entries.json + data/thumb/)
+ * Ships the curated 1077-entry prompt gallery (data/entries.json + data/thumb/)
  * inside the bundle and exposes it two ways:
  *   - agent tools `prompt_wall` (search/get/categories) and
  *     `prompt_wall_adapt` (normalize + target-adapt one template's prompt);
