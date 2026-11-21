@@ -17,6 +17,7 @@
     "cordis.patch.yml",
     "locale/*.json",
     "docs",
+    "assets",
     "icon.svg",
     "data/entries.json",
     "data/thumb",
