@@ -99,6 +99,15 @@ const PW_CSS = `
 }
 .pw-root .pw-detail h3 { margin: 0; font-size: 15px; }
 .pw-root .pw-detail img { max-width: 100%; max-height: 46vh; object-fit: contain; flex-shrink: 0; border-radius: 8px; align-self: center; }
+.pw-root .pw-cols { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.pw-root .pw-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+@media (min-width: 900px) {
+  .pw-root .pw-detail { width: min(1060px, 94vw); overflow: hidden; }
+  .pw-root .pw-cols { flex-direction: row; align-items: stretch; flex: 1; min-height: 0; }
+  .pw-root .pw-media { flex: 0 0 auto; display: flex; align-items: flex-start; }
+  .pw-root .pw-detail .pw-media img { max-height: calc(88vh - 90px); max-width: min(46vw, 520px); align-self: flex-start; }
+  .pw-root .pw-body { flex: 1; overflow-y: auto; padding-right: 4px; }
+}
 .pw-root .pw-label { font-size: 11px; color: var(--dsw-alias-label-secondary); margin-top: 4px; }
 .pw-root .pw-pre {
   margin: 0; padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.5;
@@ -109,6 +118,12 @@ const PW_CSS = `
   background: var(--dsw-alias-bg-layer-2);
 }
 .pw-root .pw-targets { display: flex; flex-wrap: wrap; gap: 6px; }
+.pw-root .pw-media img { cursor: zoom-in; }
+.pw-root .pw-lightbox {
+  position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.88); cursor: zoom-out;
+}
+.pw-root .pw-lightbox img { max-width: 92vw; max-height: 92vh; object-fit: contain; border-radius: 8px; }
 .pw-root .pw-note { font-size: 11px; color: var(--dsw-alias-state-warn-primary); }
 .pw-root .pw-close { align-self: flex-end; }
 .pw-root .pw-empty { text-align: center; padding: 40px 0; font-size: 13px; color: var(--dsw-alias-label-tertiary); }
@@ -148,6 +163,7 @@ window.__ModuleLoader__.load({
       'inspire.badge': '灵感一刷 · 再点换一批',
       'settings': '设置',
       'target.generic': '通用 · 其他模型',
+      'zoomHint': '点击看大图',
       'settings.openMode': '默认打开视图（点即应用）',
       'settings.wall': '显示全部模板',
       'settings.random': '随机刷一批灵感',
@@ -158,7 +174,7 @@ window.__ModuleLoader__.load({
       'copiedCode': '编号已复制',
       'help.title': '模板墙怎么用',
       'help.step1t': '挑一张喜欢的',
-      'help.step1': '在模板墙上挑图，点卡片可看大图和提示词全文；点卡片上的编号（如 {ex}）即可复制该编号。',
+      'help.step1': '在模板墙上挑图，点卡片可看图片和提示词全文，点图片可放大；点卡片上的编号（如 {ex}）即可复制该编号。',
       'help.step2t': '让 AI 出图',
       'help.step2': '把编号粘贴到对话里，说一句「用 {ex} 出图」或「{ex} 适配 h3-image」，AI 会自动取提示词、按目标模型适配并出图。',
       'help.step3t': '复制提示词',
@@ -199,6 +215,7 @@ window.__ModuleLoader__.load({
       'inspire.badge': 'Random draw · click again for more',
       'settings': 'Settings',
       'target.generic': 'Any model',
+      'zoomHint': 'Click to enlarge',
       'settings.openMode': 'Default view on open (applies now)',
       'settings.wall': 'All templates',
       'settings.random': 'A random inspiration batch',
@@ -209,7 +226,7 @@ window.__ModuleLoader__.load({
       'copiedCode': 'Copied',
       'help.title': 'How to use the prompt wall',
       'help.step1t': 'Pick a card',
-      'help.step1': 'Browse the wall, click a card for the full prompt; click its code (e.g. {ex}) to copy it.',
+      'help.step1': 'Browse the wall, click a card for the image and full prompt, click the image to enlarge it; click its code (e.g. {ex}) to copy it.',
       'help.step2t': 'Ask the agent to generate',
       'help.step2': 'Paste the code in chat and say "generate with {ex}" or "{ex} adapt for h3-image"; the agent fetches the prompt, adapts it to the target model and generates.',
       'help.step3t': 'Copy prompts',
@@ -351,6 +368,13 @@ window.__ModuleLoader__.load({
         setTimeout(() => setFlag(false), 1500);
       };
       const copy = () => copyText(adapted?.ok ? adapted.prompt : (entry?.prompt || ''), setCopied);
+      const [zoom, setZoom] = React.useState(false);
+      React.useEffect(() => {
+        if (!zoom) return undefined;
+        const onKey = (e) => { if (e.key === 'Escape') setZoom(false); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [zoom]);
       const copyRaw = () => copyText(entry?.prompt || '', setCopiedRaw);
       const copyCode = () => copyText(code, setCopiedCode);
 
@@ -360,7 +384,8 @@ window.__ModuleLoader__.load({
         catch (e) { setError(e.message || String(e)); }
       };
 
-      return h('div', { className: 'pw-modal', onClick: (e) => { if (e.target.classList.contains('pw-modal')) onClose(); } },
+      return h(React.Fragment, null,
+      h('div', { className: 'pw-modal', onClick: (e) => { if (e.target.classList.contains('pw-modal')) onClose(); } },
         h('div', { className: 'pw-detail', role: 'dialog', 'aria-modal': 'true' },
           error && !entry ? h('div', null, error, ' ', h('button', { className: 'pw-btn', onClick: onClose }, t('detail.close')))
             : !entry ? h('div', null, '…')
@@ -372,7 +397,9 @@ window.__ModuleLoader__.load({
                 h('button', { className: 'pw-star', 'aria-pressed': entry.fav ? 'true' : 'false',
                   role: 'switch', 'aria-checked': entry.fav ? 'true' : 'false', onClick: toggleFav }, entry.fav ? '★' : '☆'),
                 h('button', { className: 'pw-btn pw-close', onClick: onClose }, t('detail.close'))),
-              h('img', { src: thumbUrl(entry.thumb), alt: entry.code }),
+              h('div', { className: 'pw-cols' },
+              h('div', { className: 'pw-media' }, h('img', { src: thumbUrl(entry.thumb), alt: entry.code, title: t('zoomHint'), onClick: () => setZoom(true) })),
+              h('div', { className: 'pw-body' },
               h('div', { className: 'pw-row' },
                 h('span', null, entry.catcn),
                 (entry.tags || []).slice(0, 6).map((tag) => h('span', { key: tag, className: 'pw-chip' }, tag))),
@@ -396,7 +423,9 @@ window.__ModuleLoader__.load({
                   ? h(React.Fragment, null,
                       h('pre', { className: 'pw-pre' }, adapted.prompt),
                       h('button', { className: 'pw-btn', onClick: copy }, copied ? t('detail.copied') : t('detail.copy')))
-                  : h('div', { className: 'pw-note' }, adapted.prompt)))));
+                  : h('div', { className: 'pw-note' }, adapted.prompt))))))),
+      zoom && entry && h('div', { className: 'pw-lightbox', onClick: () => setZoom(false) },
+        h('img', { src: thumbUrl(entry.thumb), alt: entry.code })));
     }
 
     function Help({ onBack }) {
