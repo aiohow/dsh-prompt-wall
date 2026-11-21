@@ -228,9 +228,11 @@ render(panelEl);
 joined = textsOf(created);
 expect('settings popover modes', joined.includes('settings.wall') && joined.includes('settings.random') && joined.includes('settings.fav'));
 const favModeBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('settings.fav'));
+const callsBeforeMode = calls.length;
 favModeBtn.props.onClick();
 await new Promise((r) => setTimeout(r, 10));
 expect('mode persisted via settings call', calls.some((c) => c.url.includes('/settings') && c.body.openMode === 'fav'));
+expect('mode applies immediately (fav search after click)', calls.slice(callsBeforeMode).some((c) => c.url.includes('/search') && c.body.fav === true && c.body.offset === 0));
 // help view replaces grid, back button returns
 created.length = 0;
 render(panelEl);

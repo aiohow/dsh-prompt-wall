@@ -144,7 +144,7 @@ window.__ModuleLoader__.load({
       'inspire': '找灵感',
       'inspire.badge': '灵感一刷 · 再点换一批',
       'settings': '设置',
-      'settings.openMode': '打开模板墙时',
+      'settings.openMode': '默认打开视图（点即应用）',
       'settings.wall': '显示全部模板',
       'settings.random': '随机刷一批灵感',
       'settings.fav': '优先显示收藏',
@@ -192,7 +192,7 @@ window.__ModuleLoader__.load({
       'inspire': 'Inspire me',
       'inspire.badge': 'Random draw · click again for more',
       'settings': 'Settings',
-      'settings.openMode': 'On open, show',
+      'settings.openMode': 'Default view on open (applies now)',
       'settings.wall': 'All templates',
       'settings.random': 'A random inspiration batch',
       'settings.fav': 'Favorites first',
@@ -429,12 +429,15 @@ window.__ModuleLoader__.load({
 
       const load = React.useCallback(async (opts) => {
         const rnd = opts?.random === true;
-        const viewKey = rnd ? 'random' : (opts?.favFirst ? true : onlyFav);
+        const qq = opts?.qOverride !== undefined ? opts.qOverride : q;
+        const cc = opts?.catOverride !== undefined ? opts.catOverride : cat;
+        const fav = opts?.favOverride !== undefined ? opts.favOverride : (opts?.favFirst ? true : onlyFav);
+        const viewKey = rnd ? 'random' : fav;
         setState((s) => ({ ...s, status: s.items.length ? 'refreshing' : 'loading' }));
         try {
           const data = await call('search', rnd
             ? { q: '', cat: '', fav: false, random: true, limit: 24 }
-            : { q, cat, fav: opts?.favFirst ? true : onlyFav, limit: PAGE, offset: 0 });
+            : { q: qq, cat: cc, fav, limit: PAGE, offset: 0 });
           setState({ status: 'ready', items: data.items, total: data.total, random: !!data.random, viewKey, error: '' });
         } catch (error) {
           setState({ status: 'error', items: [], total: 0, random: false, viewKey, error: error instanceof Error ? error.message : String(error) });
@@ -520,6 +523,13 @@ window.__ModuleLoader__.load({
       const setMode = async (mode) => {
         try { const s = await call('settings', { openMode: mode }); setOpenMode(s.openMode); } catch { /* keep local */ }
         setShowSettings(false);
+        // Apply now, not just on next open — a setting that only takes effect
+        // later reads as "nothing happened". Same semantics as boot-time open.
+        setView('wall');
+        setQ(''); setCat('');
+        if (mode === 'random') { setOnlyFav(false); load({ random: true }); }
+        else if (mode === 'fav') { setOnlyFav(true); load({ favOverride: true, qOverride: '', catOverride: '' }); }
+        else { setOnlyFav(false); load({ favOverride: false, qOverride: '', catOverride: '' }); }
       };
 
       const inspire = () => { setView('wall'); setQ(''); setCat(''); setOnlyFav(false); load({ random: true }); };
