@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Prompt Wall (dsh-prompt-wall)",
-    "description": "1077 curated image-generation prompts with example images: browse as a card wall, search, filter, favorite, one-click copy. Pick a target model and the prompt is adapted for it automatically. All data stays local; no network needed."
+    "description": "A prompt wall for image generation: 1077 templates with example images, flip through the cards to pick — search, filter, favorite, one-click copy. Pick a target model and the prompt is rewritten into its format automatically, ready to paste. All data stays local; no network needed."
   }
 }
