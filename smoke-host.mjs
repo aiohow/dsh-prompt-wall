@@ -22,18 +22,19 @@ const ctx = {
   inject: (deps, fn) => fn({ get: (d) => (d === 'connection' ? { fetch: { register: (r) => { routes.set(r.path, r); return () => {}; } } } : undefined), effect: (f) => f() }),
 };
 const favsFile = path.join(mkdtempSync(path.join(tmpdir(), 'pw-fav-')), 'favs.json');
-apply(ctx, { favs_file: favsFile });
+const settingsFile = path.join(mkdtempSync(path.join(tmpdir(), 'pw-set-')), 'settings.json');
+apply(ctx, { favs_file: favsFile, settings_file: settingsFile });
 
 expect('two tools registered', tools.has('prompt_wall') && tools.has('prompt_wall_adapt'));
 expect('prompt section registered', sections.some((s) => s.name === 'prompt-wall:guide'));
-expect('six routes registered', routes.size === 6);
+expect('seven routes registered', routes.size === 7);
 
 const wall = tools.get('prompt_wall');
 const adapt = tools.get('prompt_wall_adapt');
 
 // categories
 const cats = await wall.execute({ action: 'categories' });
-expect('categories total 1126', cats.total === 1126);
+expect('categories total 1077', cats.total === 1077);
 expect('categories non-empty', cats.categories.length >= 10);
 
 // search
@@ -85,7 +86,7 @@ expect('thumb served with image content-type', tr.status === 200 && String(tr.he
 
 // empty-prompt entry guidance
 const emptyEntry = (await wall.execute({ action: 'search', q: ' ', limit: 200 })).items;
-const ae = await adapt.execute({ code: (await wall.execute({ action: 'get', code: emptyEntry[0].code })).shape === 'empty' ? emptyEntry[0].code : 'B海报01', target: 'qwen-image' });
+const ae = await adapt.execute({ code: (await wall.execute({ action: 'get', code: emptyEntry[0].code })).shape === 'empty' ? emptyEntry[0].code : 'C海报01', target: 'qwen-image' });
 expect('adapt returns structured result', typeof ae.ok === 'boolean' && typeof ae.prompt === 'string');
 
 // waterfall additions: every entry carries pixel dims and a non-empty prompt
@@ -97,6 +98,26 @@ const mid = await wall.execute({ action: 'search', limit: 100, offset: 600 });
 expect('mid-page items carry w/h too', mid.items.every((i) => i.w > 0 && i.h > 0 && i.shape !== 'empty'));
 const one = await wall.execute({ action: 'get', code: all.items[0].code });
 expect('public entry carries w/h', one.w > 0 && one.h > 0 && (one.prompt || '').length > 0);
+
+// random inspiration draw: distinct codes, within pool, flagged
+const rnd1 = await wall.execute({ action: 'search', random: true, limit: 24 });
+expect('random returns 24 flagged', rnd1.random === true && rnd1.items.length === 24 && new Set(rnd1.items.map((i) => i.code)).size === 24);
+expect('random total is full pool', rnd1.total === 1077);
+const rnd2 = await wall.execute({ action: 'search', random: true, limit: 24 });
+expect('random varies across draws', JSON.stringify(rnd1.items.map((i) => i.code)) !== JSON.stringify(rnd2.items.map((i) => i.code)));
+const rcat = await wall.execute({ action: 'search', random: true, cat: '海报', limit: 10 });
+expect('random respects cat filter', rcat.items.every((i) => i.catcn === '海报'));
+
+// settings route: default wall, persist, reject bad mode
+const setRoute = routes.get('/api/prompt-wall/settings');
+const s0 = await (await setRoute.fetch({ json: async () => ({}) })).json();
+expect('settings default openMode wall', s0.ok && s0.value.openMode === 'wall');
+const s1r = await (await setRoute.fetch({ json: async () => ({ openMode: 'random' }) })).json();
+expect('settings persists random', s1r.ok && s1r.value.openMode === 'random');
+const s2r = await (await setRoute.fetch({ json: async () => ({}) })).json();
+expect('settings read-back', s2r.value.openMode === 'random');
+const s3r = await (await setRoute.fetch({ json: async () => ({ openMode: 'nope' }) })).json();
+expect('settings rejects bad mode', s3r.ok === false);
 
 if (fails.length) { console.error('FAIL:', fails.join('; ')); process.exit(1); }
 console.log('HOST_SMOKE_OK');

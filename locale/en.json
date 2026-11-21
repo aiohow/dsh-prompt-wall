@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Prompt Wall (dsh-prompt-wall)",
-    "description": "A sidebar card wall of 1126 curated image-generation prompt templates shipped inside the bundle: search, category filter, favorites, and per-target prompt adaptation (Qwen-Image / H3-Image / GPT Image / generic) — JSON structured specs get their scene description extracted, {argument} slots filled from defaults, so text-rendering models never receive a raw JSON wall. Agent tools prompt_wall / prompt_wall_adapt expose the same data in chat. Favorites live in one local JSON file; zero network."
+    "description": "A sidebar card wall of 1077 curated image-generation prompt templates shipped inside the bundle: search, category filter, favorites, and per-target prompt adaptation (Qwen-Image / H3-Image / GPT Image / generic) — JSON structured specs get their scene description extracted, {argument} slots filled from defaults, so text-rendering models never receive a raw JSON wall. Agent tools prompt_wall / prompt_wall_adapt expose the same data in chat. Favorites live in one local JSON file; zero network."
   }
 }

@@ -12,8 +12,28 @@
  */
 
 const PW_CSS = `
-.pw-root { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; min-width: 0; max-width: 100%; box-sizing: border-box; padding: 20px 24px 0; overflow-y: auto; }
-.pw-root .pw-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pw-root { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; min-width: 0; max-width: 100%; box-sizing: border-box; padding: 0 24px; overflow-y: auto; }
+.pw-root .pw-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  position: sticky; top: 0; z-index: 5; margin: 0 -24px; padding: 20px 24px 10px;
+  background: var(--dsw-alias-bg-layer-1);
+  box-shadow: 0 8px 14px -10px rgba(0,0,0,.28); }
+.pw-root .pw-bar-right { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.pw-root .pw-codebtn { background: none; border: none; padding: 0; font: inherit; color: inherit;
+  cursor: pointer; border-bottom: 1px dashed color-mix(in srgb, var(--dsw-alias-label-secondary) 55%, transparent); }
+.pw-root .pw-codebtn:hover { color: var(--dsw-alias-brand-primary, var(--dsw-alias-label-primary)); }
+.pw-root .pw-pop { position: absolute; right: 24px; top: calc(100% + 4px); z-index: 6;
+  min-width: 200px; padding: 10px 12px; border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-1); border: 1px solid var(--dsw-alias-border-l2, rgba(128,128,128,.35));
+  box-shadow: 0 10px 26px rgba(0,0,0,.22); display: flex; flex-direction: column; gap: 6px; }
+.pw-root .pw-pop .pw-label { margin: 0 0 2px; }
+.pw-root .pw-pop .pw-btn { text-align: left; }
+.pw-root .pw-help { max-width: 640px; margin: 8px auto 24px; display: flex; flex-direction: column; gap: 10px;
+  font-size: 13px; line-height: 1.7; color: var(--dsw-alias-label-primary); }
+.pw-root .pw-help h4 { margin: 6px 0 0; font-size: 13px; }
+.pw-root .pw-help ol { margin: 0; padding-left: 20px; }
+.pw-root .pw-help li { margin: 4px 0; }
+.pw-root .pw-help code { padding: 1px 5px; border-radius: 4px; font-size: 12px;
+  background: var(--dsw-alias-bg-layer-2); }
 .pw-root .pw-input {
   flex: 1 1 220px; min-width: 160px; height: 30px; padding: 0 10px;
   border-radius: 7px; font-size: 13px; color: var(--dsw-alias-label-primary);
@@ -96,6 +116,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'dsh-prompt-wall';
     const TARGETS = ['qwen-image', 'h3-image', 'gpt-image', 'generic'];
+    const OPEN_MODES = ['wall', 'random', 'fav'];
     const zh = {
       'panel.title': '模板墙',
       'search.placeholder': '搜索模板：关键词 / 分类 / 标签…',
@@ -117,6 +138,25 @@ window.__ModuleLoader__.load({
       'detail.notfound': '未找到该模板',
       'error.load': '读取模板墙失败',
       'retry': '重试',
+      'inspire': '找灵感',
+      'inspire.badge': '灵感一刷 · 再点换一批',
+      'settings': '设置',
+      'settings.openMode': '打开模板墙时',
+      'settings.wall': '显示全部模板',
+      'settings.random': '随机刷一批灵感',
+      'settings.fav': '优先显示收藏',
+      'help': '帮助',
+      'help.back': '返回模板墙',
+      'copyCode': '点复制编号',
+      'copiedCode': '编号已复制',
+      'help.title': '模板墙怎么用',
+      'help.step1t': '挑一张喜欢的',
+      'help.step1': '在墙上刷图，点卡片看大图和提示词全文；点卡片上的编号（如 {ex}）即可复制编号。',
+      'help.step2t': '让 AI 出图',
+      'help.step2': '把编号粘贴到对话里，说一句「用 {ex} 出图」或「{ex} 适配 h3-image」，AI 会自动取提示词、按目标模型适配并出图。',
+      'help.step3t': '收藏与灵感',
+      'help.step3': '点 ☆ 收藏满意的模板；没方向时点「找灵感」随机刷一批；「设置」里可选每次打开先看收藏还是先看随机。',
+      'help.note': '所有模板与收藏都存在本机，不出网。',
     };
     const en = {
       'panel.title': 'Prompt wall',
@@ -139,6 +179,25 @@ window.__ModuleLoader__.load({
       'detail.notfound': 'Template not found',
       'error.load': 'Failed to load prompt wall',
       'retry': 'Retry',
+      'inspire': 'Inspire me',
+      'inspire.badge': 'Random draw · click again for more',
+      'settings': 'Settings',
+      'settings.openMode': 'On open, show',
+      'settings.wall': 'All templates',
+      'settings.random': 'A random inspiration batch',
+      'settings.fav': 'Favorites first',
+      'help': 'Help',
+      'help.back': 'Back to wall',
+      'copyCode': 'Copy code',
+      'copiedCode': 'Copied',
+      'help.title': 'How to use the prompt wall',
+      'help.step1t': 'Pick a card',
+      'help.step1': 'Browse the wall, click a card for the full prompt; click its code (e.g. {ex}) to copy it.',
+      'help.step2t': 'Ask the agent to generate',
+      'help.step2': 'Paste the code in chat and say "generate with {ex}" or "{ex} adapt for h3-image"; the agent fetches the prompt, adapts it to the target model and generates.',
+      'help.step3t': 'Favorites & inspiration',
+      'help.step3': 'Tap ☆ to favorite; tap "Inspire me" for a random batch; Settings chooses what you see on open.',
+      'help.note': 'Templates and favorites stay on this machine. Zero network.',
     };
     const LocaleContext = React.createContext((key) => key);
 
@@ -156,6 +215,17 @@ window.__ModuleLoader__.load({
     }
 
     const thumbUrl = (name) => `/api/prompt-wall/thumb?name=${encodeURIComponent(name)}.thumb`;
+
+    async function copyToClipboard(text) {
+      try { await navigator.clipboard.writeText(text); return true; } catch { /* non-secure ctx */ }
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove(); return ok;
+      } catch { return false; }
+    }
 
     function ensureCss() {
       if (typeof document === 'undefined' || document.getElementById('pw-css')) return;
@@ -183,12 +253,20 @@ window.__ModuleLoader__.load({
     }
 
     function Card({ item, onOpen, onFav }) {
+      const t = React.useContext(LocaleContext);
       const [favBusy, setFavBusy] = React.useState(false);
+      const [codeCopied, setCodeCopied] = React.useState(false);
       const fav = async (e) => {
         e.stopPropagation();
         if (favBusy) return;
         setFavBusy(true);
         try { await onFav(item); } finally { setFavBusy(false); }
+      };
+      const copyCode = async (e) => {
+        e.stopPropagation();
+        await copyToClipboard(item.code);
+        setCodeCopied(true);
+        setTimeout(() => setCodeCopied(false), 1200);
       };
       return h('div', { className: 'pw-card', onClick: () => onOpen(item.code) },
         h('img', { className: 'pw-thumb', loading: 'lazy', src: thumbUrl(item.thumb), alt: item.code,
@@ -198,7 +276,8 @@ window.__ModuleLoader__.load({
         h('div', { className: 'pw-meta' },
           h('div', { className: 'pw-title' }, item.title || item.code),
           h('div', { className: 'pw-row' },
-            h('span', null, item.code),
+            h('button', { className: 'pw-codebtn', title: t('copyCode'), onClick: copyCode },
+              codeCopied ? t('copiedCode') : item.code),
             h('span', null, item.catcn),
             h(ShapeChip, { shape: item.shape }),
             h('button', {
@@ -217,6 +296,7 @@ window.__ModuleLoader__.load({
       const [busy, setBusy] = React.useState(false);
       const [copied, setCopied] = React.useState(false);
       const [copiedRaw, setCopiedRaw] = React.useState(false);
+      const [copiedCode, setCopiedCode] = React.useState(false);
 
       React.useEffect(() => {
         let alive = true;
@@ -240,12 +320,13 @@ window.__ModuleLoader__.load({
       };
 
       const copyText = async (text, setFlag) => {
-        try { await navigator.clipboard.writeText(text); } catch { /* non-secure ctx */ }
+        await copyToClipboard(text);
         setFlag(true);
         setTimeout(() => setFlag(false), 1500);
       };
       const copy = () => copyText(adapted?.ok ? adapted.prompt : (entry?.prompt || ''), setCopied);
       const copyRaw = () => copyText(entry?.prompt || '', setCopiedRaw);
+      const copyCode = () => copyText(code, setCopiedCode);
 
       const toggleFav = async () => {
         if (!entry) return;
@@ -260,6 +341,8 @@ window.__ModuleLoader__.load({
             : h(React.Fragment, null,
               h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
                 h('h3', { style: { flex: 1 } }, `${entry.code} · ${entry.title}`),
+                h('button', { className: 'pw-btn', title: t('copyCode'), onClick: copyCode },
+                  copiedCode ? t('copiedCode') : t('copyCode')),
                 h('button', { className: 'pw-star', 'aria-pressed': entry.fav ? 'true' : 'false',
                   role: 'switch', 'aria-checked': entry.fav ? 'true' : 'false', onClick: toggleFav }, entry.fav ? '★' : '☆'),
                 h('button', { className: 'pw-btn pw-close', onClick: onClose }, t('detail.close'))),
@@ -290,6 +373,19 @@ window.__ModuleLoader__.load({
                   : h('div', { className: 'pw-note' }, adapted.prompt)))));
     }
 
+    function Help({ onBack }) {
+      const t = React.useContext(LocaleContext);
+      const ex = 'B美食02';
+      return h('div', { className: 'pw-help' },
+        h('h4', null, t('help.title')),
+        h('ol', null,
+          h('li', null, h('b', null, t('help.step1t')), h('br'), t('help.step1').replace(/\{ex\}/g, ex)),
+          h('li', null, h('b', null, t('help.step2t')), h('br'), t('help.step2').replace(/\{ex\}/g, ex)),
+          h('li', null, h('b', null, t('help.step3t')), h('br'), t('help.step3'))),
+        h('div', { className: 'pw-label' }, t('help.note')),
+        h('button', { className: 'pw-btn', onClick: onBack, style: { alignSelf: 'flex-start', marginTop: 6 } }, '← ' + t('help.back')));
+    }
+
     function Panel() {
       const t = React.useContext(LocaleContext);
       const [state, setState] = React.useState({ status: 'loading', data: null, error: '' });
@@ -298,24 +394,50 @@ window.__ModuleLoader__.load({
       const [cat, setCat] = React.useState('');
       const [onlyFav, setOnlyFav] = React.useState(false);
       const [open, setOpen] = React.useState(null);
+      const [view, setView] = React.useState('wall');
+      const [showSettings, setShowSettings] = React.useState(false);
+      const [openMode, setOpenMode] = React.useState('wall');
+      const booted = React.useRef(false);
 
-      const load = React.useCallback(async () => {
+      const load = React.useCallback(async (opts) => {
+        const rnd = opts?.random === true;
         setState((s) => ({ ...s, status: s.data ? 'refreshing' : 'loading' }));
         try {
-          const data = await call('search', { q, cat, fav: onlyFav, limit: 200 });
+          const data = await call('search', rnd
+            ? { q: '', cat: '', fav: false, random: true, limit: 24 }
+            : { q, cat, fav: opts?.favFirst ? true : onlyFav, limit: 200 });
           setState({ status: 'ready', data, error: '' });
         } catch (error) {
           setState({ status: 'error', data: null, error: error instanceof Error ? error.message : String(error) });
         }
       }, [q, cat, onlyFav]);
 
-      React.useEffect(() => { ensureCss(); load(); }, [load]);
+      React.useEffect(() => { ensureCss(); }, []);
+      React.useEffect(() => {
+        if (booted.current) { load(); return; }
+        booted.current = true;
+        call('settings').then((s) => {
+          const mode = OPEN_MODES.includes(s.openMode) ? s.openMode : 'wall';
+          setOpenMode(mode);
+          if (mode === 'random') return load({ random: true });
+          if (mode === 'fav') { setOnlyFav(true); return load({ favFirst: true }); }
+          return load();
+        }).catch(() => load());
+      }, [load]);
+
       React.useEffect(() => { call('categories').then((v) => setCats(v.categories || [])).catch(() => {}); }, []);
 
       const toggleFav = async (item) => {
         const r = await call('fav', { code: item.code });
         setState((s) => s.data ? { ...s, data: { ...s.data, items: s.data.items.map((it) => it.code === item.code ? { ...it, fav: r.fav } : it) } } : s);
       };
+
+      const setMode = async (mode) => {
+        try { const s = await call('settings', { openMode: mode }); setOpenMode(s.openMode); } catch { /* keep local */ }
+        setShowSettings(false);
+      };
+
+      const inspire = () => { setView('wall'); setQ(''); setCat(''); setOnlyFav(false); load({ random: true }); };
 
       return h('div', { className: 'pw-root' },
         h('div', { className: 'pw-bar' },
@@ -326,13 +448,27 @@ window.__ModuleLoader__.load({
             cats.map((c) => h('option', { key: c.name, value: c.name }, `${c.name} (${c.count})`))),
           h('button', { className: 'pw-btn', 'aria-pressed': onlyFav ? 'true' : 'false',
             onClick: () => setOnlyFav((v) => !v) }, t('filter.fav')),
-          h('span', { className: 'pw-count' }, state.data ? t('count.n').replace('{n}', state.data.total) : '')),
-        state.status === 'error'
-          ? h('div', { className: 'pw-empty' }, t('error.load'), ' ', h('button', { className: 'pw-btn', onClick: load }, t('retry')))
-          : h('div', { className: 'pw-grid' },
-              state.status === 'loading' ? h('div', { className: 'pw-empty' }, '…')
-                : !state.data || state.data.items.length === 0 ? h('div', { className: 'pw-empty' }, '—')
-                : state.data.items.map((it) => h(Card, { key: it.code, item: it, onOpen: setOpen, onFav: toggleFav }))),
+          h('span', { className: 'pw-count' }, state.data?.random ? t('inspire.badge')
+            : state.data ? t('count.n').replace('{n}', state.data.total) : ''),
+          h('div', { className: 'pw-bar-right' },
+            h('button', { className: 'pw-btn', onClick: inspire }, '✦ ' + t('inspire')),
+            h('button', { className: 'pw-btn', 'aria-pressed': showSettings ? 'true' : 'false',
+              onClick: () => setShowSettings((v) => !v) }, t('settings')),
+            h('button', { className: 'pw-btn', 'aria-pressed': view === 'help' ? 'true' : 'false',
+              onClick: () => setView((v) => (v === 'help' ? 'wall' : 'help')) }, '? ' + t('help'))),
+          showSettings && h('div', { className: 'pw-pop' },
+            h('div', { className: 'pw-label' }, t('settings.openMode')),
+            [['wall', 'settings.wall'], ['random', 'settings.random'], ['fav', 'settings.fav']]
+              .map(([m, k]) => h('button', { key: m, className: 'pw-btn', 'aria-pressed': openMode === m ? 'true' : 'false',
+                onClick: () => setMode(m) }, t(k))))),
+        view === 'help'
+          ? h(Help, { onBack: () => setView('wall') })
+          : state.status === 'error'
+            ? h('div', { className: 'pw-empty' }, t('error.load'), ' ', h('button', { className: 'pw-btn', onClick: load }, t('retry')))
+            : h('div', { className: 'pw-grid' },
+                state.status === 'loading' ? h('div', { className: 'pw-empty' }, '…')
+                  : !state.data || state.data.items.length === 0 ? h('div', { className: 'pw-empty' }, '—')
+                  : state.data.items.map((it) => h(Card, { key: it.code, item: it, onOpen: setOpen, onFav: toggleFav }))),
         open && h(Detail, { code: open, onClose: () => setOpen(null), onChanged: load }));
     }
 

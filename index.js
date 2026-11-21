@@ -142,6 +142,29 @@ function favsFile() {
   return path.join(homedir(), ".dsh", "prompt-wall", "favs.json");
 }
 
+const OPEN_MODES = ["wall", "random", "fav"];
+
+function settingsFile() {
+  return path.join(homedir(), ".dsh", "prompt-wall", "settings.json");
+}
+
+async function loadSettings(file) {
+  try {
+    const parsed = JSON.parse(await readFile(file, "utf8"));
+    return { openMode: OPEN_MODES.includes(parsed.openMode) ? parsed.openMode : "wall" };
+  } catch (e) {
+    if (e && e.code === "ENOENT") return { openMode: "wall" };
+    throw new Error(`dsh-prompt-wall: cannot read settings ${file}: ${e.message}`);
+  }
+}
+
+async function saveSettings(file, s) {
+  await mkdir(path.dirname(file), { recursive: true });
+  const tmp = `${file}.part`;
+  await writeFile(tmp, JSON.stringify({ version: 1, ...s }, null, 1) + "\n", "utf8");
+  await rename(tmp, file);
+}
+
 async function loadFavs(file) {
   try {
     const parsed = JSON.parse(await readFile(file, "utf8"));
@@ -197,6 +220,21 @@ function searchEntries(entries, favs, args) {
       .map((x) => x.e);
   }
   const total = list.length;
+  if (args.random === true && total > 0) {
+    // Fisher-Yates partial shuffle: pick `limit` distinct entries as an
+    // inspiration draw; the full filtered set stays the pool.
+    const pool = list.slice();
+    const n = Math.min(limit, total);
+    for (let i = 0; i < n; i++) {
+      const j = i + Math.floor(Math.random() * (total - i));
+      const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+    }
+    const items = pool.slice(0, n).map((e) => ({
+      code: e.code, title: e.title, catcn: e.catcn, cat: e.cat, tags: (e.tags || []).slice(0, 6),
+      shape: e._shape, thumb: e._thumb, fav: favs.has(e.code), w: e.w, h: e.h,
+    }));
+    return { total, offset: 0, limit: n, items, random: true };
+  }
   const page = list.slice(offset, offset + limit).map((e) => ({
     code: e.code, title: e.title, catcn: e.catcn, cat: e.cat, tags: (e.tags || []).slice(0, 6),
     shape: e._shape, thumb: e._thumb, fav: favs.has(e.code), w: e.w, h: e.h,
@@ -220,7 +258,7 @@ function publicEntry(e, favs) {
 export const inject = ["tools", "systemPrompt"];
 
 const PROMPT_TEXT = [
-  "生图模板选片墙（prompt-wall）已装载：1126 条例图生图提示词模板，工具 prompt_wall 检索（search/get/categories），prompt_wall_adapt 按目标模型出适配提示词（qwen-image/h3-image 提取画面描述，gpt-image 保留结构化 JSON，generic 纯文本兜底）。",
+  "生图模板选片墙（prompt-wall）已装载：1077 条例图生图提示词模板，工具 prompt_wall 检索（search/get/categories），prompt_wall_adapt 按目标模型出适配提示词（qwen-image/h3-image 提取画面描述，gpt-image 保留结构化 JSON，generic 纯文本兜底）。",
   "用户要\"找个 XX 风格的模板/提示词\"时优先用 prompt_wall 检索而不是凭记忆编；出图前用 prompt_wall_adapt 拿干净提示词，JSON 规格模板严禁整坨直喂文本渲染型模型（会画成文字墙）。",
 ].join("\n");
 
@@ -229,6 +267,8 @@ export function apply(ctx, config) {
     ? config.data_dir : path.join(PKG_DIR, "data");
   const favFile = typeof config?.favs_file === "string" && config.favs_file !== ""
     ? config.favs_file : favsFile();
+  const setFile = typeof config?.settings_file === "string" && config.settings_file !== ""
+    ? config.settings_file : settingsFile();
 
   let entries = null;
   let entriesError = "";
@@ -286,6 +326,16 @@ export function apply(ctx, config) {
           await new Promise((res, rej) => { chain = chain.then(async () => { try { await saveFavs(favFile, favs); res(); } catch (e) { rej(e); } }); });
           return { code, fav: favs.has(code), total: favs.size };
         }
+        case "settings": {
+          const cur = await loadSettings(setFile);
+          if (args?.openMode !== undefined) {
+            if (!OPEN_MODES.includes(args.openMode)) throw new Error(`bad openMode: ${args.openMode}`);
+            const next = { ...cur, openMode: args.openMode };
+            await new Promise((res, rej) => { chain = chain.then(async () => { try { await saveSettings(setFile, next); res(); } catch (e) { rej(e); } }); });
+            return next;
+          }
+          return cur;
+        }
         case "thumb": {
           let stem = String(args?.name || "").replace(/[^A-Za-z0-9\u4e00-\u9fff._-]/g, "");
           if (stem.endsWith(".thumb")) stem = stem.slice(0, -".thumb".length);
@@ -308,7 +358,7 @@ export function apply(ctx, config) {
     {
       name: "prompt_wall",
       description:
-        "Search the local image-prompt template wall (生图模板选片墙, 1126 curated templates with reference images). Actions: search (q keywords, cat category name, fav=true favorites only, limit/offset), get (code — returns full prompt + {argument} slots), categories (name + count list). Use before answering requests for image-generation prompts or style references.",
+        "Search the local image-prompt template wall (生图模板选片墙, 1077 curated templates with reference images). Actions: search (q keywords, cat category name, fav=true favorites only, limit/offset), get (code — returns full prompt + {argument} slots), categories (name + count list). Use before answering requests for image-generation prompts or style references.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -370,7 +420,7 @@ export function apply(ctx, config) {
       ctx.log?.("dsh-prompt-wall: connection.fetch.register unavailable, client routes skipped");
       return;
     }
-    for (const op of ["search", "categories", "get", "adapt", "fav"]) {
+    for (const op of ["search", "categories", "get", "adapt", "fav", "settings"]) {
       scope.effect(
         () => register({
           path: `/api/prompt-wall/${op}`,

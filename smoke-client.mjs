@@ -24,24 +24,30 @@ const React = {
   },
   useEffect: (f) => { f(); },
   useCallback: (f) => f,
+  useRef(init) {
+    const store = curStore;
+    const i = curIdx++;
+    if (store[i] === undefined) store[i] = { current: init };
+    return store[i];
+  },
   createContext: (def) => ({ Provider: 'provider', _default: def }),
 };
 
 const wall = {
   total: 3, offset: 0, limit: 200,
   items: [
-    { code: 'B海报01', title: 'TITLE_ONE', catcn: '海报', cat: 'posters', tags: ['neon'], shape: 'json', thumb: 'Bposter01', fav: false },
+    { code: 'B海报02', title: 'TITLE_ONE', catcn: '海报', cat: 'posters', tags: ['neon'], shape: 'json', thumb: 'Bposter01', fav: false },
     { code: 'A信息图02', title: 'TITLE_TWO', catcn: '信息图', cat: 'infographic', tags: [], shape: 'arguments', thumb: 'Ainfographic02', fav: true },
     { code: 'D摄影03', title: 'TITLE_THREE', catcn: '摄影质感', cat: 'photo', tags: [], shape: 'plain', thumb: 'Dphoto03', fav: false },
   ],
 };
 const entry = {
-  code: 'B海报01', title: 'TITLE_ONE', catcn: '海报', cat: 'posters', lib: 'x',
+  code: 'B海报02', title: 'TITLE_ONE', catcn: '海报', cat: 'posters', lib: 'x',
   tags: ['neon'], shape: 'json', thumb: 'Bposter01', fav: false,
   prompt: '{"description":"a huge json spec"}', args: [],
 };
 const adapted = {
-  code: 'B海报01', title: 'TITLE_ONE', ok: true, target: 'qwen-image', shape: 'json',
+  code: 'B海报02', title: 'TITLE_ONE', ok: true, target: 'qwen-image', shape: 'json',
   prompt: 'a huge json spec', notes: ['JSON 结构化规格已提取画面描述（直喂整坨 JSON 会被文本渲染型模型画成文字墙）'], args: [],
 };
 const calls = [];
@@ -129,7 +135,7 @@ created.length = 0;
 render(panelEl);
 let joined = textsOf(created);
 expect('cards rendered with titles', joined.includes('TITLE_ONE') && joined.includes('TITLE_THREE'));
-expect('codes rendered', joined.includes('B海报01'));
+expect('codes rendered', joined.includes('B海报02'));
 expect('shape chips rendered', joined.includes('shape.json') && joined.includes('shape.plain'));
 expect('count shown', joined.includes('3'));
 expect('CSS injected once', injectedStyles.length === 1 && String(injectedStyles[0].textContent).includes('.pw-root .pw-card'));
@@ -137,7 +143,7 @@ expect('thumb url has .thumb suffix', created.some((n) => typeof n.props.src ===
 const css = String(injectedStyles[0].textContent);
 expect('waterfall columns css', /\.pw-root \.pw-grid \{[^}]*columns:/.test(css));
 expect('card break-inside avoid', /\.pw-root \.pw-card \{[^}]*break-inside: avoid/.test(css));
-expect('root has padding', /\.pw-root \{[^}]*padding: 20px 24px/.test(css));
+expect('bar carries top padding', /\.pw-root \.pw-bar \{[^}]*padding: 20px 24px 10px/.test(css));
 expect('thumb no fixed aspect', !/\.pw-thumb \{[^}]*aspect-ratio: 4\/3/.test(css));
 
 // Favorite toggle on first card
@@ -145,7 +151,7 @@ const star = created.find((n) => n.type === 'button' && n.props.className === 'p
 if (!star) { console.error('FAIL: star button not found'); process.exit(1); }
 star.props.onClick({ stopPropagation: () => {} });
 await new Promise((r) => setTimeout(r, 10));
-expect('fav call sent', calls.some((c) => c.url.includes('/fav') && c.body.code === 'B海报01'));
+expect('fav call sent', calls.some((c) => c.url.includes('/fav') && c.body.code === 'B海报02'));
 
 // Open detail via card click
 const card = created.find((n) => n.props.className === 'pw-card');
@@ -178,6 +184,61 @@ render(panelEl);
 joined = textsOf(created);
 expect('adapt call sent with target', calls.some((c) => c.url.includes('/adapt') && c.body.target === 'qwen-image'));
 expect('adapted prompt + note rendered', joined.includes('a huge json spec') && joined.includes('文字墙'));
+
+// --- inspiration / settings / help / code-copy -----------------------------
+// boot fetched settings first
+expect('settings fetched on boot', calls.some((c) => c.url.includes('/settings')));
+// sticky bar css
+expect('bar sticky css', /\.pw-root \.pw-bar \{[^}]*position: sticky/.test(css));
+// close detail, back to wall
+const closeBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('detail.close'));
+closeBtn.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+created.length = 0;
+render(panelEl);
+joined = textsOf(created);
+expect('inspire button in bar', joined.includes('inspire'));
+expect('settings button in bar', joined.includes('settings'));
+expect('help button in bar', joined.includes('help'));
+// card code is a copy button
+const codeBtn = created.find((n) => n.type === 'button' && n.props.className === 'pw-codebtn');
+expect('card code copy button', !!codeBtn && codeBtn.children.flat(Infinity).includes('B海报02'));
+// inspire click sends random search
+const inspBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('inspire'));
+inspBtn.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+expect('inspire sends random search', calls.some((c) => c.url.includes('/search') && c.body.random === true));
+// settings popover with three modes
+created.length = 0;
+render(panelEl);
+const setBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('settings') && n.props.className === 'pw-btn');
+setBtn.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+created.length = 0;
+render(panelEl);
+joined = textsOf(created);
+expect('settings popover modes', joined.includes('settings.wall') && joined.includes('settings.random') && joined.includes('settings.fav'));
+const favModeBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('settings.fav'));
+favModeBtn.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+expect('mode persisted via settings call', calls.some((c) => c.url.includes('/settings') && c.body.openMode === 'fav'));
+// help view replaces grid, back button returns
+created.length = 0;
+render(panelEl);
+const helpBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('help') && n.props.className === 'pw-btn');
+helpBtn.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+created.length = 0;
+render(panelEl);
+joined = textsOf(created);
+expect('help view shows steps', joined.includes('help.title') && joined.includes('help.step2t') && joined.includes('help.back'));
+expect('help view hides grid', !joined.includes('TITLE_ONE'));
+const backBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('help.back'));
+backBtn.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+created.length = 0;
+render(panelEl);
+expect('back returns to wall', textsOf(created).includes('TITLE_ONE'));
 
 if (fails.length) { console.error('FAIL:', fails.join('; ')); console.error('texts:', textsOf(created).slice(0, 300)); process.exit(1); }
 console.log('CLIENT_SMOKE_OK');
