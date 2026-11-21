@@ -375,7 +375,7 @@ window.__ModuleLoader__.load({
 
     function Help({ onBack }) {
       const t = React.useContext(LocaleContext);
-      const ex = 'B美食02';
+      const ex = 'C海报01';
       return h('div', { className: 'pw-help' },
         h('h4', null, t('help.title')),
         h('ol', null,
