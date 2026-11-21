@@ -61,7 +61,7 @@ globalThis.fetch = async (url, opts) => {
   if (url.includes('/fav')) return { ok: true, json: async () => ({ ok: true, value: { code: body.code, fav: !wall.items[0].fav, total: 2 } }) };
   return { ok: true, json: async () => ({ ok: true, value: {} }) };
 };
-const window = { location: { origin: 'http://x' }, addEventListener: () => {}, removeEventListener: () => {} };
+const window = { location: { origin: 'http://x' }, innerWidth: 1316, innerHeight: 1256, addEventListener: () => {}, removeEventListener: () => {} };
 
 const injectedStyles = [];
 globalThis.document = {
@@ -184,6 +184,27 @@ render(panelEl);
 joined = textsOf(created);
 expect('adapt call sent with target', calls.some((c) => c.url.includes('/adapt') && c.body.target === 'qwen-image'));
 expect('adapted prompt + note rendered', joined.includes('a huge json spec') && joined.includes('文字墙'));
+
+// --- lightbox: click image opens, click big image closes, detail stays ----
+const mediaImg = created.find((n) => n.type === 'img' && n.props.className === undefined && typeof n.props.onClick === 'function');
+if (!mediaImg) { console.error('FAIL: zoomable detail image not found'); process.exit(1); }
+mediaImg.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+created.length = 0;
+render(panelEl);
+const lb = created.find((n) => n.props.className === 'pw-lightbox');
+expect('lightbox opens on image click', !!lb);
+const lbImg = created.find((n) => n.type === 'img' && n.props.style && n.props.style.width > 400);
+expect('lightbox image scaled to viewport', !!lbImg && lbImg.props.style.height > 400);
+expect('lightbox has zoom-out cursor', /\.pw-root \.pw-lightbox \{[^}]*cursor: zoom-out/.test(css));
+expect('detail image has zoom-in cursor', /\.pw-root \.pw-media img \{ cursor: zoom-in; \}/.test(css));
+lb.props.onClick();
+await new Promise((r) => setTimeout(r, 10));
+created.length = 0;
+render(panelEl);
+joined = textsOf(created);
+expect('lightbox closes on big-image click', !created.some((n) => n.props.className === 'pw-lightbox'));
+expect('detail stays open after lightbox close', joined.includes('TITLE_ONE'));
 
 // --- inspiration / settings / help / code-copy -----------------------------
 // boot fetched settings first

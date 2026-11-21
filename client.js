@@ -105,7 +105,8 @@ const PW_CSS = `
   .pw-root .pw-detail { width: min(1060px, 94vw); overflow: hidden; }
   .pw-root .pw-cols { flex-direction: row; align-items: stretch; flex: 1; min-height: 0; }
   .pw-root .pw-media { flex: 0 0 auto; display: flex; align-items: flex-start; }
-  .pw-root .pw-detail .pw-media img { max-height: calc(88vh - 90px); max-width: min(46vw, 520px); align-self: flex-start; }
+  .pw-root .pw-media { width: min(46vw, 520px); }
+  .pw-root .pw-detail .pw-media img { width: 100%; height: auto; max-height: calc(88vh - 90px); object-fit: contain; align-self: flex-start; }
   .pw-root .pw-body { flex: 1; overflow-y: auto; padding-right: 4px; }
 }
 .pw-root .pw-label { font-size: 11px; color: var(--dsw-alias-label-secondary); margin-top: 4px; }
@@ -330,6 +331,14 @@ window.__ModuleLoader__.load({
             }, item.fav ? '★' : '☆'))));
     }
 
+    function fitBox(w, hgt) {
+      // Thumbnails ship at 400px wide; the lightbox upscales to fill the
+      // viewport (92%) since no larger local copy exists.
+      const nw = Math.max(1, Number(w) || 4), nh = Math.max(1, Number(hgt) || 4);
+      const s = Math.min(window.innerWidth * 0.92 / nw, window.innerHeight * 0.92 / nh);
+      return { width: Math.round(nw * s), height: Math.round(nh * s) };
+    }
+
     function Detail({ code, onClose, onChanged }) {
       const t = React.useContext(LocaleContext);
       const [entry, setEntry] = React.useState(null);
@@ -425,7 +434,7 @@ window.__ModuleLoader__.load({
                       h('button', { className: 'pw-btn', onClick: copy }, copied ? t('detail.copied') : t('detail.copy')))
                   : h('div', { className: 'pw-note' }, adapted.prompt))))))),
       zoom && entry && h('div', { className: 'pw-lightbox', onClick: () => setZoom(false) },
-        h('img', { src: thumbUrl(entry.thumb), alt: entry.code })));
+        h('img', { src: thumbUrl(entry.thumb), alt: entry.code, style: fitBox(entry.w, entry.h) })));
     }
 
     function Help({ onBack }) {
