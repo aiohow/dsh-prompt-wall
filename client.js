@@ -12,7 +12,7 @@
  */
 
 const PW_CSS = `
-.pw-root { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
+.pw-root { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; min-width: 0; max-width: 100%; }
 .pw-root .pw-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .pw-root .pw-input {
   flex: 1 1 220px; min-width: 160px; height: 30px; padding: 0 10px;
