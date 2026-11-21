@@ -210,7 +210,7 @@ window.__ModuleLoader__.load({
       'help.step4t': 'Favorites & inspiration',
       'help.step4': 'Tap ☆ to favorite; tap "Inspire me" for a random batch; Settings chooses what you see on open.',
       'help.aboutt': 'License & Disclaimer',
-      'help.license': 'Plugin code is MIT-licensed (see LICENSE in the install directory). Template data and thumbnails are not MIT: they come from 9 upstream repositories under their own licenses (one more was collected but not redistributed due to a missing license) (MIT / Apache-2.0 / CC BY 4.0 / CC0 / per-repo notices); see UPSTREAMS.md and licenses/upstream/ and follow the matching upstream terms when redistributing.',
+      'help.license': 'Plugin code is MIT-licensed (see LICENSE in the install directory). Template data and thumbnails are not MIT: they come from 9 upstream repositories under their own licenses (MIT / Apache-2.0 / CC BY 4.0 / CC0 / per-repo notices); one more source was collected but not redistributed due to a missing license. See UPSTREAMS.md and licenses/upstream/ and follow the matching upstream terms when redistributing.',
       'help.disclaimer': 'Templates are community-collected and not individually verified. Generation results depend on your model and parameters; this plugin makes no warranties of any kind about output quality. Preview thumbnails are resized upstream outputs shown for style reference only.',
       'help.nonaffil': 'An independent community project, not affiliated with or endorsed by OpenAI, Google, or any model vendor; GPT, ChatGPT, Nano Banana and other names are trademarks of their respective owners.',
       'help.note': 'All plugin data stays local: templates, favorites and settings live on this machine. No network required.',
