@@ -6,7 +6,7 @@
 
 > **非官方声明**：本插件是社区独立开发的第三方工具，与 OpenAI、Google 或任何模型厂商无关联、未获背书；文中出现的 GPT、ChatGPT、Nano Banana 等名称均归其商标持有人所有。
 
-一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）插件：把 1077 条社区生图提示词模板做成侧栏里的**选片墙**——缩略图瀑布流、搜索、收藏，配两个 agent 工具（`prompt_wall` 检索、`prompt_wall_adapt` 按目标模型出适配提示词）。面板负责挑，聊天负责出图：点开一张模板，复制编号贴进对话说"用这个生图"，agent 取提示词、按你的生图模型改好格式再跑管线。
+一个 DeepSeek Harness（DSH）插件：把 1077 条社区生图提示词模板做成侧栏里的**选片墙**——缩略图瀑布流、搜索、收藏，配两个 agent 工具（`prompt_wall` 检索、`prompt_wall_adapt` 按目标模型出适配提示词）。面板负责挑，聊天负责出图：点开一张模板，复制编号贴进对话说"用这个生图"，agent 取提示词、按你的生图模型改好格式再跑管线。
 
 ![模板墙](assets/wall.jpg)
 
@@ -73,7 +73,7 @@ node smoke-client.mjs   # 客户端：假 React 渲染、墙、收藏、帮助
 
 > **Unofficial**: an independent community project, not affiliated with or endorsed by OpenAI, Google, or any model vendor. GPT, ChatGPT, Nano Banana and other names are trademarks of their respective owners.
 
-A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH) plugin: 1077 community image-generation prompt templates as a **prompt wall** in the sidebar — thumbnail waterfall, search, favorites — plus two agent tools (`prompt_wall` for retrieval, `prompt_wall_adapt` for per-model prompt adaptation). The panel is the picker, the chat does the generating: open a template, click its code, paste it into the conversation and say "make an image with this" — the agent fetches the prompt, reshapes it for your image model and runs your pipeline.
+A DeepSeek Harness (DSH) plugin: 1077 community image-generation prompt templates as a **prompt wall** in the sidebar — thumbnail waterfall, search, favorites — plus two agent tools (`prompt_wall` for retrieval, `prompt_wall_adapt` for per-model prompt adaptation). The panel is the picker, the chat does the generating: open a template, click its code, paste it into the conversation and say "make an image with this" — the agent fetches the prompt, reshapes it for your image model and runs your pipeline.
 
 ![The wall](assets/wall.jpg)
 
