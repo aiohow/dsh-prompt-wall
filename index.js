@@ -397,6 +397,10 @@ export function apply(ctx, config) {
       () => register({
         path: "/api/prompt-wall/thumb",
         methods: ["GET"],
+        // Must be explicit: the host bridge treats a missing requestBody as
+        // streaming and hands GET a body stream, which throws
+        // "Request with GET/HEAD method cannot have body" → empty 400.
+        requestBody: "buffered",
         fetch: async (request) => {
           const name = new URL(request.url).searchParams.get("name") || "";
           try {

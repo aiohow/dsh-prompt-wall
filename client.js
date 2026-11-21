@@ -40,6 +40,7 @@ const PW_CSS = `
 .pw-root .pw-grid {
   flex: 1 1 auto; min-height: 0; overflow-y: auto;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
+  grid-auto-rows: min-content;
   align-content: start; padding-bottom: 16px;
 }
 .pw-root .pw-card {
