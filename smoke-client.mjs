@@ -34,7 +34,7 @@ const React = {
 };
 
 const wall = {
-  total: 3, offset: 0, limit: 200,
+  total: 250, offset: 0, limit: 100,
   items: [
     { code: 'B海报02', title: 'TITLE_ONE', catcn: '海报', cat: 'posters', tags: ['neon'], shape: 'json', thumb: 'Bposter01', fav: false },
     { code: 'A信息图02', title: 'TITLE_TWO', catcn: '信息图', cat: 'infographic', tags: [], shape: 'arguments', thumb: 'Ainfographic02', fav: true },
@@ -203,6 +203,15 @@ expect('help button in bar', joined.includes('help'));
 // card code is a copy button
 const codeBtn = created.find((n) => n.type === 'button' && n.props.className === 'pw-codebtn');
 expect('card code copy button', !!codeBtn && codeBtn.children.flat(Infinity).includes('B海报02'));
+// scroll near bottom triggers next page with offset = loaded count
+const root = created.find((n) => n.props.className === 'pw-root');
+expect('root has onScroll', typeof root.props.onScroll === 'function');
+root.props.onScroll({ currentTarget: { scrollHeight: 10000, scrollTop: 9000, clientHeight: 8000 } });
+await new Promise((r) => setTimeout(r, 10));
+expect('scroll loads next page', calls.some((c) => c.url.includes('/search') && c.body.offset === 3 && c.body.limit === 100));
+created.length = 0;
+render(panelEl);
+expect('progress count shows loaded/total', textsOf(created).includes('6/250'));
 // inspire click sends random search
 const inspBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('inspire'));
 inspBtn.props.onClick();

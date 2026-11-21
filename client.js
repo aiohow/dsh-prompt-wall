@@ -157,6 +157,7 @@ window.__ModuleLoader__.load({
       'help.step3t': '收藏与灵感',
       'help.step3': '点 ☆ 收藏满意的模板；没方向时点「找灵感」随机刷一批；「设置」里可选每次打开先看收藏还是先看随机。',
       'help.note': '所有模板与收藏都存在本机，不出网。',
+      'more.loading': '加载更多…',
     };
     const en = {
       'panel.title': 'Prompt wall',
@@ -198,6 +199,7 @@ window.__ModuleLoader__.load({
       'help.step3t': 'Favorites & inspiration',
       'help.step3': 'Tap ☆ to favorite; tap "Inspire me" for a random batch; Settings chooses what you see on open.',
       'help.note': 'Templates and favorites stay on this machine. Zero network.',
+      'more.loading': 'Loading more…',
     };
     const LocaleContext = React.createContext((key) => key);
 
@@ -388,7 +390,7 @@ window.__ModuleLoader__.load({
 
     function Panel() {
       const t = React.useContext(LocaleContext);
-      const [state, setState] = React.useState({ status: 'loading', data: null, error: '' });
+      const [state, setState] = React.useState({ status: 'loading', items: [], total: 0, random: false, error: '' });
       const [cats, setCats] = React.useState([]);
       const [q, setQ] = React.useState('');
       const [cat, setCat] = React.useState('');
@@ -397,20 +399,40 @@ window.__ModuleLoader__.load({
       const [view, setView] = React.useState('wall');
       const [showSettings, setShowSettings] = React.useState(false);
       const [openMode, setOpenMode] = React.useState('wall');
+      const [loadingMore, setLoadingMore] = React.useState(false);
       const booted = React.useRef(false);
+      const PAGE = 100;
 
       const load = React.useCallback(async (opts) => {
         const rnd = opts?.random === true;
-        setState((s) => ({ ...s, status: s.data ? 'refreshing' : 'loading' }));
+        setState((s) => ({ ...s, status: s.items.length ? 'refreshing' : 'loading' }));
         try {
           const data = await call('search', rnd
             ? { q: '', cat: '', fav: false, random: true, limit: 24 }
-            : { q, cat, fav: opts?.favFirst ? true : onlyFav, limit: 200 });
-          setState({ status: 'ready', data, error: '' });
+            : { q, cat, fav: opts?.favFirst ? true : onlyFav, limit: PAGE, offset: 0 });
+          setState({ status: 'ready', items: data.items, total: data.total, random: !!data.random, error: '' });
         } catch (error) {
-          setState({ status: 'error', data: null, error: error instanceof Error ? error.message : String(error) });
+          setState({ status: 'error', items: [], total: 0, random: false, error: error instanceof Error ? error.message : String(error) });
         }
       }, [q, cat, onlyFav]);
+
+      const loadMore = React.useCallback(async () => {
+        setState((s) => {
+          if (s.status !== 'ready' || s.random || s.items.length >= s.total) return s;
+          return s;
+        });
+        const cur = stateRef.current;
+        if (cur.status !== 'ready' || cur.random || cur.items.length >= cur.total || moreBusy.current) return;
+        moreBusy.current = true; setLoadingMore(true);
+        try {
+          const data = await call('search', { q, cat, fav: onlyFav, limit: PAGE, offset: cur.items.length });
+          setState((s) => ({ ...s, items: s.items.concat(data.items), total: data.total }));
+        } catch { /* keep what we have; next scroll retries */ }
+        finally { moreBusy.current = false; setLoadingMore(false); }
+      }, [q, cat, onlyFav]);
+      const stateRef = React.useRef(state);
+      stateRef.current = state;
+      const moreBusy = React.useRef(false);
 
       React.useEffect(() => { ensureCss(); }, []);
       React.useEffect(() => {
@@ -429,7 +451,7 @@ window.__ModuleLoader__.load({
 
       const toggleFav = async (item) => {
         const r = await call('fav', { code: item.code });
-        setState((s) => s.data ? { ...s, data: { ...s.data, items: s.data.items.map((it) => it.code === item.code ? { ...it, fav: r.fav } : it) } } : s);
+        setState((s) => ({ ...s, items: s.items.map((it) => it.code === item.code ? { ...it, fav: r.fav } : it) }));
       };
 
       const setMode = async (mode) => {
@@ -439,7 +461,12 @@ window.__ModuleLoader__.load({
 
       const inspire = () => { setView('wall'); setQ(''); setCat(''); setOnlyFav(false); load({ random: true }); };
 
-      return h('div', { className: 'pw-root' },
+      const onScroll = (e) => {
+        const el = e.currentTarget;
+        if (el.scrollHeight - el.scrollTop - el.clientHeight < 600) loadMore();
+      };
+
+      return h('div', { className: 'pw-root', onScroll },
         h('div', { className: 'pw-bar' },
           h('input', { className: 'pw-input', placeholder: t('search.placeholder'), value: q,
             onChange: (e) => setQ(e.target.value) }),
@@ -448,8 +475,9 @@ window.__ModuleLoader__.load({
             cats.map((c) => h('option', { key: c.name, value: c.name }, `${c.name} (${c.count})`))),
           h('button', { className: 'pw-btn', 'aria-pressed': onlyFav ? 'true' : 'false',
             onClick: () => setOnlyFav((v) => !v) }, t('filter.fav')),
-          h('span', { className: 'pw-count' }, state.data?.random ? t('inspire.badge')
-            : state.data ? t('count.n').replace('{n}', state.data.total) : ''),
+          h('span', { className: 'pw-count' }, state.random ? t('inspire.badge')
+            : state.status === 'error' ? ''
+            : t('count.n').replace('{n}', state.total) + (state.items.length < state.total ? ` · ${state.items.length}/${state.total}` : '')),
           h('div', { className: 'pw-bar-right' },
             h('button', { className: 'pw-btn', onClick: inspire }, '✦ ' + t('inspire')),
             h('button', { className: 'pw-btn', 'aria-pressed': showSettings ? 'true' : 'false',
@@ -467,8 +495,11 @@ window.__ModuleLoader__.load({
             ? h('div', { className: 'pw-empty' }, t('error.load'), ' ', h('button', { className: 'pw-btn', onClick: load }, t('retry')))
             : h('div', { className: 'pw-grid' },
                 state.status === 'loading' ? h('div', { className: 'pw-empty' }, '…')
-                  : !state.data || state.data.items.length === 0 ? h('div', { className: 'pw-empty' }, '—')
-                  : state.data.items.map((it) => h(Card, { key: it.code, item: it, onOpen: setOpen, onFav: toggleFav }))),
+                  : state.items.length === 0 ? h('div', { className: 'pw-empty' }, '—')
+                  : state.items.map((it) => h(Card, { key: it.code, item: it, onOpen: setOpen, onFav: toggleFav }))),
+        view === 'wall' && state.status === 'ready' && !state.random && state.items.length < state.total
+          ? h('div', { className: 'pw-count', style: { textAlign: 'center', padding: '0 0 16px' } }, loadingMore ? t('more.loading') : '')
+          : null,
         open && h(Detail, { code: open, onClose: () => setOpen(null), onChanged: load }));
     }
 
