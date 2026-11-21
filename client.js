@@ -154,8 +154,10 @@ window.__ModuleLoader__.load({
       'help.step1': '在墙上刷图，点卡片看大图和提示词全文；点卡片上的编号（如 {ex}）即可复制编号。',
       'help.step2t': '让 AI 出图',
       'help.step2': '把编号粘贴到对话里，说一句「用 {ex} 出图」或「{ex} 适配 h3-image」，AI 会自动取提示词、按目标模型适配并出图。',
-      'help.step3t': '收藏与灵感',
-      'help.step3': '点 ☆ 收藏满意的模板；没方向时点「找灵感」随机刷一批；「设置」里可选每次打开先看收藏还是先看随机。',
+      'help.step3t': '复制提示词',
+      'help.step3': '点开模板详情：原文下方的「复制」拿原始提示词；选目标模型点「生成适配」后，适配版下方的「复制」拿的就是适配该模型的版本，直接贴给对应模型或生图工具即可。',
+      'help.step4t': '收藏与灵感',
+      'help.step4': '点 ☆ 收藏满意的模板；没方向时点「找灵感」随机刷一批；「设置」里可选每次打开先看收藏还是先看随机。',
       'help.note': '所有模板与收藏都存在本机，不出网。',
       'more.loading': '加载更多…',
     };
@@ -196,8 +198,10 @@ window.__ModuleLoader__.load({
       'help.step1': 'Browse the wall, click a card for the full prompt; click its code (e.g. {ex}) to copy it.',
       'help.step2t': 'Ask the agent to generate',
       'help.step2': 'Paste the code in chat and say "generate with {ex}" or "{ex} adapt for h3-image"; the agent fetches the prompt, adapts it to the target model and generates.',
-      'help.step3t': 'Favorites & inspiration',
-      'help.step3': 'Tap ☆ to favorite; tap "Inspire me" for a random batch; Settings chooses what you see on open.',
+      'help.step3t': 'Copy prompts',
+      'help.step3': 'Open a template: "Copy" under the original grabs it as-is; pick a target model, hit "Adapt", then "Copy" under the adapted version, ready to paste into that model.',
+      'help.step4t': 'Favorites & inspiration',
+      'help.step4': 'Tap ☆ to favorite; tap "Inspire me" for a random batch; Settings chooses what you see on open.',
       'help.note': 'Templates and favorites stay on this machine. Zero network.',
       'more.loading': 'Loading more…',
     };
@@ -383,7 +387,8 @@ window.__ModuleLoader__.load({
         h('ol', null,
           h('li', null, h('b', null, t('help.step1t')), h('br'), t('help.step1').replace(/\{ex\}/g, ex)),
           h('li', null, h('b', null, t('help.step2t')), h('br'), t('help.step2').replace(/\{ex\}/g, ex)),
-          h('li', null, h('b', null, t('help.step3t')), h('br'), t('help.step3'))),
+          h('li', null, h('b', null, t('help.step3t')), h('br'), t('help.step3')),
+          h('li', null, h('b', null, t('help.step4t')), h('br'), t('help.step4'))),
         h('div', { className: 'pw-label' }, t('help.note')),
         h('button', { className: 'pw-btn', onClick: onBack, style: { alignSelf: 'flex-start', marginTop: 6 } }, '← ' + t('help.back')));
     }
@@ -401,6 +406,9 @@ window.__ModuleLoader__.load({
       const [openMode, setOpenMode] = React.useState('wall');
       const [loadingMore, setLoadingMore] = React.useState(false);
       const booted = React.useRef(false);
+      const rootRef = React.useRef(null);
+      const scrollMem = React.useRef({ all: 0, fav: 0 });
+      const restoreTo = React.useRef(null);
       const PAGE = 100;
 
       const load = React.useCallback(async (opts) => {
@@ -454,6 +462,35 @@ window.__ModuleLoader__.load({
         setState((s) => ({ ...s, items: s.items.map((it) => it.code === item.code ? { ...it, fav: r.fav } : it) }));
       };
 
+      // Scroll memory per view: toggling favorites-only must not teleport the
+      // wall. Leaving a view stores its scrollTop; entering restores its own.
+      const toggleOnlyFav = () => {
+        const el = rootRef.current;
+        scrollMem.current[onlyFav ? 'all' : 'fav'] = el ? el.scrollTop : 0;
+        restoreTo.current = scrollMem.current[onlyFav ? 'fav' : 'all'] || 0;
+        setOnlyFav((v) => !v);
+      };
+
+      React.useEffect(() => {
+        if (restoreTo.current == null || state.status !== 'ready' || state.random) return;
+        const pos = restoreTo.current;
+        restoreTo.current = null;
+        const el = rootRef.current;
+        if (!el) return;
+        if (pos <= 0) { el.scrollTop = 0; return; }
+        (async () => {
+          let guard = 0;
+          while (guard < 12) {
+            const cur = stateRef.current;
+            if (cur.items.length >= cur.total || el.scrollHeight >= pos + el.clientHeight + 40) break;
+            await loadMore();
+            await new Promise((r) => setTimeout(r, 60));
+            guard++;
+          }
+          el.scrollTop = pos;
+        })();
+      }, [state.status, state.items.length, state.random, onlyFav, loadMore]);
+
       const setMode = async (mode) => {
         try { const s = await call('settings', { openMode: mode }); setOpenMode(s.openMode); } catch { /* keep local */ }
         setShowSettings(false);
@@ -466,7 +503,7 @@ window.__ModuleLoader__.load({
         if (el.scrollHeight - el.scrollTop - el.clientHeight < 600) loadMore();
       };
 
-      return h('div', { className: 'pw-root', onScroll },
+      return h('div', { className: 'pw-root', onScroll, ref: rootRef },
         h('div', { className: 'pw-bar' },
           h('input', { className: 'pw-input', placeholder: t('search.placeholder'), value: q,
             onChange: (e) => setQ(e.target.value) }),
@@ -474,7 +511,7 @@ window.__ModuleLoader__.load({
             h('option', { value: '' }, t('filter.all')),
             cats.map((c) => h('option', { key: c.name, value: c.name }, `${c.name} (${c.count})`))),
           h('button', { className: 'pw-btn', 'aria-pressed': onlyFav ? 'true' : 'false',
-            onClick: () => setOnlyFav((v) => !v) }, t('filter.fav')),
+            onClick: toggleOnlyFav }, t('filter.fav')),
           h('span', { className: 'pw-count' }, state.random ? t('inspire.badge')
             : state.status === 'error' ? ''
             : t('count.n').replace('{n}', state.total) + (state.items.length < state.total ? ` · ${state.items.length}/${state.total}` : '')),

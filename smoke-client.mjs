@@ -241,6 +241,7 @@ created.length = 0;
 render(panelEl);
 joined = textsOf(created);
 expect('help view shows steps', joined.includes('help.title') && joined.includes('help.step2t') && joined.includes('help.back'));
+expect('help mentions copy usage', joined.includes('help.step3t') && joined.includes('help.step4t'));
 expect('help view hides grid', !joined.includes('TITLE_ONE'));
 const backBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('help.back'));
 backBtn.props.onClick();
