@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Prompt Wall (dsh-prompt-wall)",
-    "description": "A prompt wall for image generation: 1077 templates with example images, flip through the cards to pick — search, filter, favorite, one-click copy. Pick a target model and the prompt is rewritten into its format automatically, ready to paste. All data stays local; no network needed."
+    "description": "Unofficial community plugin. A prompt wall for image generation: 1077 templates with example images in the sidebar — flip through the masonry cards to pick, with search, filters, favorites and one-click copy. Copy a code, paste it into the chat and say \"make an image with this\": the agent tools (prompt_wall / prompt_wall_adapt) fetch the prompt and rewrite it for your target model (qwen-image / h3-image / gpt-image / generic) — JSON specs are extracted into a scene description instead of being drawn as a wall of text. Everything stays local (favorites and settings in ~/.dsh/prompt-wall/); browsing and adaptation need no network. Templates are compiled from nine public upstream repos: code is MIT, prompts and thumbnails keep their upstream licenses (see UPSTREAMS.md). Current version (0.1.0): card wall, search & favorites, four-target adaptation, agent tools."
   }
 }
