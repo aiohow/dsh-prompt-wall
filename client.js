@@ -32,6 +32,9 @@ const PW_CSS = `
 .pw-root .pw-help h4 { margin: 6px 0 0; font-size: 13px; }
 .pw-root .pw-help ol { margin: 0; padding-left: 20px; }
 .pw-root .pw-help li { margin: 4px 0; }
+.pw-root .pw-about { margin-top: 6px; padding: 10px 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px;
+  border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-2); }
+.pw-root .pw-about p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--dsw-alias-label-secondary); }
 .pw-root .pw-help code { padding: 1px 5px; border-radius: 4px; font-size: 12px;
   background: var(--dsw-alias-bg-layer-2); }
 .pw-root .pw-input {
@@ -158,6 +161,9 @@ window.__ModuleLoader__.load({
       'help.step3': '点开模板详情：原文下方的「复制」拿原始提示词；选目标模型点「生成适配」后，适配版下方的「复制」拿的就是适配该模型的版本，直接贴给对应模型或生图工具即可。',
       'help.step4t': '收藏与灵感',
       'help.step4': '点 ☆ 收藏满意的模板；没方向时点「找灵感」随机刷一批；「设置」里可选每次打开先看收藏还是先看随机。',
+      'help.aboutt': '关于与合规',
+      'help.license': '插件代码采用 MIT 许可（见安装目录 LICENSE）。模板数据与例图不属于 MIT：来自 10 个上游仓库，各自遵循其原始许可（MIT / Apache-2.0 / CC BY 4.0 / CC0 / 仓库署名声明），来源与条款见 UPSTREAMS.md 与 licenses/upstream/；二次分发时请按对应上游许可执行。',
+      'help.disclaimer': '模板为社区收集，未逐一验证；生成效果取决于你的模型与参数，本插件不对输出质量作任何明示或暗示的保证。例图为上游生成结果的缩略图，仅供风格参考，不代表你的出图效果。',
       'help.note': '所有模板与收藏都存在本机，不出网。',
       'more.loading': '加载更多…',
     };
@@ -202,6 +208,9 @@ window.__ModuleLoader__.load({
       'help.step3': 'Open a template: "Copy" under the original grabs it as-is; pick a target model, hit "Adapt", then "Copy" under the adapted version, ready to paste into that model.',
       'help.step4t': 'Favorites & inspiration',
       'help.step4': 'Tap ☆ to favorite; tap "Inspire me" for a random batch; Settings chooses what you see on open.',
+      'help.aboutt': 'About & compliance',
+      'help.license': 'Plugin code is MIT-licensed (see LICENSE in the install directory). Template data and thumbnails are not MIT: they come from 10 upstream repositories under their own licenses (MIT / Apache-2.0 / CC BY 4.0 / CC0 / per-repo notices); see UPSTREAMS.md and licenses/upstream/ and follow the matching upstream terms when redistributing.',
+      'help.disclaimer': 'Templates are community-collected and not individually verified. Generation results depend on your model and parameters; this plugin makes no warranties of any kind about output quality. Preview thumbnails are resized upstream outputs shown for style reference only.',
       'help.note': 'Templates and favorites stay on this machine. Zero network.',
       'more.loading': 'Loading more…',
     };
@@ -389,7 +398,11 @@ window.__ModuleLoader__.load({
           h('li', null, h('b', null, t('help.step2t')), h('br'), t('help.step2').replace(/\{ex\}/g, ex)),
           h('li', null, h('b', null, t('help.step3t')), h('br'), t('help.step3')),
           h('li', null, h('b', null, t('help.step4t')), h('br'), t('help.step4'))),
-        h('div', { className: 'pw-label' }, t('help.note')),
+        h('div', { className: 'pw-about' },
+          h('div', { className: 'pw-label' }, t('help.aboutt')),
+          h('p', null, t('help.license')),
+          h('p', null, t('help.disclaimer')),
+          h('p', null, t('help.note'))),
         h('button', { className: 'pw-btn', onClick: onBack, style: { alignSelf: 'flex-start', marginTop: 6 } }, '← ' + t('help.back')));
     }
 
@@ -413,14 +426,15 @@ window.__ModuleLoader__.load({
 
       const load = React.useCallback(async (opts) => {
         const rnd = opts?.random === true;
+        const viewKey = rnd ? 'random' : (opts?.favFirst ? true : onlyFav);
         setState((s) => ({ ...s, status: s.items.length ? 'refreshing' : 'loading' }));
         try {
           const data = await call('search', rnd
             ? { q: '', cat: '', fav: false, random: true, limit: 24 }
             : { q, cat, fav: opts?.favFirst ? true : onlyFav, limit: PAGE, offset: 0 });
-          setState({ status: 'ready', items: data.items, total: data.total, random: !!data.random, error: '' });
+          setState({ status: 'ready', items: data.items, total: data.total, random: !!data.random, viewKey, error: '' });
         } catch (error) {
-          setState({ status: 'error', items: [], total: 0, random: false, error: error instanceof Error ? error.message : String(error) });
+          setState({ status: 'error', items: [], total: 0, random: false, viewKey, error: error instanceof Error ? error.message : String(error) });
         }
       }, [q, cat, onlyFav]);
 
@@ -463,33 +477,35 @@ window.__ModuleLoader__.load({
       };
 
       // Scroll memory per view: toggling favorites-only must not teleport the
-      // wall. Leaving a view stores its scrollTop; entering restores its own.
+      // wall. Leaving a view stores its scrollTop; entering restores its own,
+      // but only once the target view is actually loaded (viewKey match).
       const toggleOnlyFav = () => {
         const el = rootRef.current;
-        scrollMem.current[onlyFav ? 'all' : 'fav'] = el ? el.scrollTop : 0;
-        restoreTo.current = scrollMem.current[onlyFav ? 'fav' : 'all'] || 0;
+        scrollMem.current[onlyFav ? 'fav' : 'all'] = el ? el.scrollTop : 0;
+        restoreTo.current = { viewKey: !onlyFav, pos: scrollMem.current[onlyFav ? 'all' : 'fav'] || 0 };
         setOnlyFav((v) => !v);
       };
 
       React.useEffect(() => {
-        if (restoreTo.current == null || state.status !== 'ready' || state.random) return;
-        const pos = restoreTo.current;
+        const r = restoreTo.current;
+        if (!r || state.status !== 'ready' || state.viewKey !== r.viewKey) return;
         restoreTo.current = null;
         const el = rootRef.current;
         if (!el) return;
-        if (pos <= 0) { el.scrollTop = 0; return; }
+        if (r.pos <= 0) { el.scrollTop = 0; return; }
         (async () => {
           let guard = 0;
           while (guard < 12) {
             const cur = stateRef.current;
-            if (cur.items.length >= cur.total || el.scrollHeight >= pos + el.clientHeight + 40) break;
+            if (cur.status !== 'ready' || cur.viewKey !== r.viewKey) break;
+            if (cur.items.length >= cur.total || el.scrollHeight >= r.pos + el.clientHeight + 40) break;
             await loadMore();
-            await new Promise((r) => setTimeout(r, 60));
+            await new Promise((res) => setTimeout(res, 60));
             guard++;
           }
-          el.scrollTop = pos;
+          el.scrollTop = r.pos;
         })();
-      }, [state.status, state.items.length, state.random, onlyFav, loadMore]);
+      }, [state.status, state.items.length, state.viewKey, loadMore]);
 
       const setMode = async (mode) => {
         try { const s = await call('settings', { openMode: mode }); setOpenMode(s.openMode); } catch { /* keep local */ }
