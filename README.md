@@ -82,7 +82,7 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH) plug
 - **Card wall** — masonry layout, native image ratios (no cropping), sticky top bar that stays reachable while you scroll all 1077 entries.
 - **Search & filter** — keyword search across code/title/tags/category, category dropdown, favorites-only toggle.
 - **Favorites** — star anything; stored locally, never leaves the machine.
-- **Inspire** — one click draws 24 random templates, click again for a new batch; a setting chooses what the wall shows on open (everything / random / favorites first).
+- **Inspire** — one click draws 24 random templates, click again for a new batch; choose the default view (everything / random / favorites first) in Settings.
 - **Template detail** — two-column layout on wide screens: image on the left, prompt text, tags and adaptation entry on the right; click the image to zoom.
 
 ![Template detail](assets/detail.jpg)
@@ -132,4 +132,4 @@ Both print `*_SMOKE_OK` on success. User data (favorites, settings) lives in `~/
 
 ### Disclaimer
 
-The templates are community-collected prompts; their quality and suitability for your model are your call. This plugin makes no warranty about generation results. Preview thumbnails are resized from upstream example outputs and do not guarantee what your generation will look like.
+The templates are community-collected prompts; their quality and suitability for your model are your call. This plugin makes no warranty about generation results. Preview thumbnails are resized from upstream example outputs and do not represent the appearance of your generated images.
