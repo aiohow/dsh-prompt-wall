@@ -88,5 +88,15 @@ const emptyEntry = (await wall.execute({ action: 'search', q: ' ', limit: 200 })
 const ae = await adapt.execute({ code: (await wall.execute({ action: 'get', code: emptyEntry[0].code })).shape === 'empty' ? emptyEntry[0].code : 'B海报01', target: 'qwen-image' });
 expect('adapt returns structured result', typeof ae.ok === 'boolean' && typeof ae.prompt === 'string');
 
+// waterfall additions: every entry carries pixel dims and a non-empty prompt
+const all = await wall.execute({ action: 'search', limit: 100, offset: 0 });
+expect('search items carry w/h', all.items.every((i) => Number.isInteger(i.w) && i.w > 0 && Number.isInteger(i.h) && i.h > 0));
+const noEmpty = all.items.every((i) => i.shape !== 'empty');
+expect('no empty-shape entries on first page', noEmpty);
+const mid = await wall.execute({ action: 'search', limit: 100, offset: 600 });
+expect('mid-page items carry w/h too', mid.items.every((i) => i.w > 0 && i.h > 0 && i.shape !== 'empty'));
+const one = await wall.execute({ action: 'get', code: all.items[0].code });
+expect('public entry carries w/h', one.w > 0 && one.h > 0 && (one.prompt || '').length > 0);
+
 if (fails.length) { console.error('FAIL:', fails.join('; ')); process.exit(1); }
 console.log('HOST_SMOKE_OK');

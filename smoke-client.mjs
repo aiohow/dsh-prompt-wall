@@ -134,6 +134,11 @@ expect('shape chips rendered', joined.includes('shape.json') && joined.includes(
 expect('count shown', joined.includes('3'));
 expect('CSS injected once', injectedStyles.length === 1 && String(injectedStyles[0].textContent).includes('.pw-root .pw-card'));
 expect('thumb url has .thumb suffix', created.some((n) => typeof n.props.src === 'string' && n.props.src.includes('.thumb')));
+const css = String(injectedStyles[0].textContent);
+expect('waterfall columns css', /\.pw-root \.pw-grid \{[^}]*columns:/.test(css));
+expect('card break-inside avoid', /\.pw-root \.pw-card \{[^}]*break-inside: avoid/.test(css));
+expect('root has padding', /\.pw-root \{[^}]*padding: 20px 24px/.test(css));
+expect('thumb no fixed aspect', !/\.pw-thumb \{[^}]*aspect-ratio: 4\/3/.test(css));
 
 // Favorite toggle on first card
 const star = created.find((n) => n.type === 'button' && n.props.className === 'pw-star');
@@ -158,6 +163,9 @@ render(panelEl);
 joined = textsOf(created);
 expect('detail opened with title', joined.includes('TITLE_ONE'));
 expect('detail shows raw prompt', joined.includes('a huge json spec'));
+// raw-prompt copy button present before any adaptation
+const copyBtns = created.filter((n) => n.type === 'button' && n.children.flat(Infinity).includes('detail.copy'));
+expect('raw prompt copy button rendered', copyBtns.length >= 1);
 expect('detail shows target buttons', joined.includes('qwen-image') && joined.includes('gpt-image') && joined.includes('h3-image') && joined.includes('generic'));
 
 // Fire adapt button

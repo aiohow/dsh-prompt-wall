@@ -199,7 +199,7 @@ function searchEntries(entries, favs, args) {
   const total = list.length;
   const page = list.slice(offset, offset + limit).map((e) => ({
     code: e.code, title: e.title, catcn: e.catcn, cat: e.cat, tags: (e.tags || []).slice(0, 6),
-    shape: e._shape, thumb: e._thumb, fav: favs.has(e.code),
+    shape: e._shape, thumb: e._thumb, fav: favs.has(e.code), w: e.w, h: e.h,
   }));
   return { total, offset, limit, items: page };
 }
@@ -208,6 +208,7 @@ function publicEntry(e, favs) {
   return {
     code: e.code, title: e.title, catcn: e.catcn, cat: e.cat, lib: e.lib,
     tags: e.tags || [], shape: e._shape, thumb: e._thumb, fav: favs.has(e.code),
+    w: e.w, h: e.h,
     prompt: e.prompt || "", args: listArgs(e.prompt || ""),
   };
 }

@@ -12,7 +12,7 @@
  */
 
 const PW_CSS = `
-.pw-root { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; min-width: 0; max-width: 100%; }
+.pw-root { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; min-width: 0; max-width: 100%; box-sizing: border-box; padding: 20px 24px 0; overflow-y: auto; }
 .pw-root .pw-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .pw-root .pw-input {
   flex: 1 1 220px; min-width: 160px; height: 30px; padding: 0 10px;
@@ -38,13 +38,12 @@ const PW_CSS = `
 }
 .pw-root .pw-count { font-size: 12px; color: var(--dsw-alias-label-secondary); }
 .pw-root .pw-grid {
-  flex: 1 1 auto; min-height: 0; overflow-y: auto;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
-  grid-auto-rows: min-content;
-  align-content: start; padding-bottom: 16px;
+  columns: 4 220px; column-gap: 10px;
+  padding-bottom: 16px;
 }
 .pw-root .pw-card {
-  border-radius: 10px; overflow: hidden; cursor: pointer;
+  break-inside: avoid; -webkit-column-break-inside: avoid;
+  margin: 0 0 10px; border-radius: 10px; overflow: hidden; cursor: pointer;
   background: var(--dsw-alias-bg-layer-1);
   border: 1px solid color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent);
   transition: transform 160ms ease, box-shadow 160ms ease;
@@ -53,7 +52,7 @@ const PW_CSS = `
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0,0,0,.18);
 }
-.pw-root .pw-thumb { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: var(--dsw-alias-bg-layer-2); }
+.pw-root .pw-thumb { width: 100%; height: auto; display: block; background: var(--dsw-alias-bg-layer-2); }
 .pw-root .pw-card .pw-meta { padding: 7px 9px 9px; display: flex; flex-direction: column; gap: 4px; }
 .pw-root .pw-title { font-size: 12px; line-height: 1.35; color: var(--dsw-alias-label-primary);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -86,7 +85,7 @@ const PW_CSS = `
 .pw-root .pw-targets { display: flex; flex-wrap: wrap; gap: 6px; }
 .pw-root .pw-note { font-size: 11px; color: var(--dsw-alias-state-warn-primary); }
 .pw-root .pw-close { align-self: flex-end; }
-.pw-root .pw-empty { grid-column: 1/-1; text-align: center; padding: 40px 0; font-size: 13px; color: var(--dsw-alias-label-tertiary); }
+.pw-root .pw-empty { text-align: center; padding: 40px 0; font-size: 13px; color: var(--dsw-alias-label-tertiary); }
 `;
 
 window.__ModuleLoader__.load({
@@ -193,6 +192,8 @@ window.__ModuleLoader__.load({
       };
       return h('div', { className: 'pw-card', onClick: () => onOpen(item.code) },
         h('img', { className: 'pw-thumb', loading: 'lazy', src: thumbUrl(item.thumb), alt: item.code,
+          width: item.w || undefined, height: item.h || undefined,
+          style: item.w && item.h ? { aspectRatio: `${item.w} / ${item.h}` } : undefined,
           onError: (e) => { e.target.style.visibility = 'hidden'; } }),
         h('div', { className: 'pw-meta' },
           h('div', { className: 'pw-title' }, item.title || item.code),
@@ -215,6 +216,7 @@ window.__ModuleLoader__.load({
       const [adapted, setAdapted] = React.useState(null);
       const [busy, setBusy] = React.useState(false);
       const [copied, setCopied] = React.useState(false);
+      const [copiedRaw, setCopiedRaw] = React.useState(false);
 
       React.useEffect(() => {
         let alive = true;
@@ -237,12 +239,13 @@ window.__ModuleLoader__.load({
         finally { setBusy(false); }
       };
 
-      const copy = async () => {
-        const text = adapted?.ok ? adapted.prompt : (entry?.prompt || '');
+      const copyText = async (text, setFlag) => {
         try { await navigator.clipboard.writeText(text); } catch { /* non-secure ctx */ }
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
+        setFlag(true);
+        setTimeout(() => setFlag(false), 1500);
       };
+      const copy = () => copyText(adapted?.ok ? adapted.prompt : (entry?.prompt || ''), setCopied);
+      const copyRaw = () => copyText(entry?.prompt || '', setCopiedRaw);
 
       const toggleFav = async () => {
         if (!entry) return;
@@ -269,6 +272,7 @@ window.__ModuleLoader__.load({
                 h('div', { className: 'pw-row' }, entry.args.map((a) => h('span', { key: a.name, className: 'pw-chip' }, `${a.name}=${a.default || '…'}`)))),
               h('div', { className: 'pw-label' }, t('detail.prompt')),
               h('pre', { className: 'pw-pre' }, entry.prompt || '—'),
+              entry.prompt ? h('button', { className: 'pw-btn', onClick: copyRaw }, copiedRaw ? t('detail.copied') : t('detail.copy')) : null,
               h('div', { className: 'pw-label' }, t('detail.adapt')),
               h('div', { className: 'pw-targets' },
                 TARGETS.map((tg) => h('button', {
