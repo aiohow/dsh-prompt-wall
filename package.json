@@ -39,6 +39,7 @@
     }
   },
   "engines": {
+    "node": "^22.19.0 || >=24.0.0",
     "dsh": ">=0.2.0"
   },
   "repository": {
@@ -48,8 +49,14 @@
   "keywords": [
     "dsh",
     "dsh-plugin",
+    "cordis",
     "prompt",
     "image-generation",
-    "prompt-wall"
-  ]
+    "prompt-wall",
+    "local"
+  ],
+  "homepage": "https://github.com/aiohow/dsh-prompt-wall#readme",
+  "bugs": {
+    "url": "https://github.com/aiohow/dsh-prompt-wall/issues"
+  }
 }
