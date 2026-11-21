@@ -98,11 +98,14 @@ const PW_CSS = `
   padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px;
 }
 .pw-root .pw-detail h3 { margin: 0; font-size: 15px; }
-.pw-root .pw-detail img { max-width: 100%; border-radius: 8px; align-self: center; }
+.pw-root .pw-detail img { max-width: 100%; max-height: 46vh; object-fit: contain; flex-shrink: 0; border-radius: 8px; align-self: center; }
 .pw-root .pw-label { font-size: 11px; color: var(--dsw-alias-label-secondary); margin-top: 4px; }
 .pw-root .pw-pre {
   margin: 0; padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.5;
   white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow-y: auto;
+  /* overflow!=visible makes the flex auto-min-size 0, so a tall portrait
+     image would shrink this box to a single line — pin it instead. */
+  flex-shrink: 0;
   background: var(--dsw-alias-bg-layer-2);
 }
 .pw-root .pw-targets { display: flex; flex-wrap: wrap; gap: 6px; }
