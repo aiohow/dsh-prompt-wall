@@ -18,19 +18,19 @@ const PW_CSS = `
   flex: 1 1 220px; min-width: 160px; height: 30px; padding: 0 10px;
   border-radius: 7px; font-size: 13px; color: var(--dsw-alias-label-primary);
   background: var(--dsw-alias-bg-layer-1);
-  border: 1px solid color-mix(in srgb, var(--dsw-alias-label-primary) 12%, transparent);
+  border: 1px solid var(--dsw-alias-border-l2, rgba(128,128,128,.35));
   outline: none;
 }
-.pw-root .pw-input:focus { border-color: var(--dsw-alias-acrate-primary, var(--dsw-alias-label-primary)); }
+.pw-root .pw-input:focus { border-color: var(--dsw-alias-brand-primary, var(--dsw-alias-label-primary)); }
 .pw-root .pw-select {
   height: 30px; padding: 0 8px; border-radius: 7px; font-size: 12px;
   color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-layer-1);
-  border: 1px solid color-mix(in srgb, var(--dsw-alias-label-primary) 12%, transparent);
+  border: 1px solid var(--dsw-alias-border-l2, rgba(128,128,128,.35));
 }
 .pw-root .pw-btn {
   height: 30px; padding: 0 12px; border-radius: 7px; font-size: 12px; cursor: pointer;
   color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-layer-1);
-  border: 1px solid color-mix(in srgb, var(--dsw-alias-label-primary) 12%, transparent);
+  border: 1px solid var(--dsw-alias-border-l2, rgba(128,128,128,.35));
 }
 .pw-root .pw-btn:hover { background: var(--dsw-alias-bg-layer-2); }
 .pw-root .pw-btn[aria-pressed="true"] {
