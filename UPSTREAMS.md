@@ -1,7 +1,8 @@
 # Upstream Sources & Attribution
 
-This project merges prompt templates collected from ten public GitHub repositories
-(current distribution: 1077 entries; 库2 is not distributed, see its row).
+This project distributes prompt templates from nine public GitHub repositories
+(1077 entries). A tenth repository was collected but is not redistributed
+because its claimed license file is missing; see the 库2 row below.
 All upstream license texts are archived under [`licenses/upstream/`](licenses/upstream/).
 
 | # | Repo | License | Contributed | License file |

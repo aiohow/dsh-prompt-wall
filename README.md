@@ -41,7 +41,7 @@ draws a wall of text, so `prompt_wall_adapt` normalizes per target:
 
 ## Data
 
-`data/entries.json` — 1077 entries compiled from ten public upstream
+`data/entries.json` — 1077 entries compiled from nine public upstream
 repositories. Each entry carries its source `lib`, category, tags, prompt
 shape, and thumbnail. Thumbnails are downscaled previews of the upstream
 example images.
