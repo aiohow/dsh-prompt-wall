@@ -144,6 +144,7 @@ window.__ModuleLoader__.load({
       'inspire': '找灵感',
       'inspire.badge': '灵感一刷 · 再点换一批',
       'settings': '设置',
+      'target.generic': '通用 · 其他模型',
       'settings.openMode': '默认打开视图（点即应用）',
       'settings.wall': '显示全部模板',
       'settings.random': '随机刷一批灵感',
@@ -194,6 +195,7 @@ window.__ModuleLoader__.load({
       'inspire': 'Inspire me',
       'inspire.badge': 'Random draw · click again for more',
       'settings': 'Settings',
+      'target.generic': 'Any model',
       'settings.openMode': 'Default view on open (applies now)',
       'settings.wall': 'All templates',
       'settings.random': 'A random inspiration batch',
@@ -381,8 +383,8 @@ window.__ModuleLoader__.load({
               h('div', { className: 'pw-targets' },
                 TARGETS.map((tg) => h('button', {
                   key: tg, className: 'pw-btn', 'aria-pressed': target === tg ? 'true' : 'false',
-                  onClick: () => { setTarget(tg); setAdapted(null); },
-                }, tg)),
+                  title: tg, onClick: () => { setTarget(tg); setAdapted(null); },
+                }, tg === 'generic' ? t('target.generic') : tg)),
                 h('button', { className: 'pw-btn', onClick: doAdapt, disabled: busy }, busy ? '…' : t('detail.adaptbtn'))),
               adapted && h(React.Fragment, null,
                 h('div', { className: 'pw-label' }, t('detail.adapted')),
@@ -423,6 +425,7 @@ window.__ModuleLoader__.load({
       const [onlyFav, setOnlyFav] = React.useState(false);
       const [open, setOpen] = React.useState(null);
       const [view, setView] = React.useState('wall');
+      const seedRef = React.useRef(Date.now());
       const [showSettings, setShowSettings] = React.useState(false);
       const [openMode, setOpenMode] = React.useState('wall');
       const [loadingMore, setLoadingMore] = React.useState(false);
@@ -442,7 +445,8 @@ window.__ModuleLoader__.load({
         try {
           const data = await call('search', rnd
             ? { q: '', cat: '', fav: false, random: true, limit: 24 }
-            : { q: qq, cat: cc, fav, limit: PAGE, offset: 0 });
+            : { q: qq, cat: cc, fav, limit: PAGE, offset: 0,
+                shuffle: qq ? undefined : true, seed: seedRef.current });
           setState({ status: 'ready', items: data.items, total: data.total, random: !!data.random, viewKey, error: '' });
         } catch (error) {
           setState({ status: 'error', items: [], total: 0, random: false, viewKey, error: error instanceof Error ? error.message : String(error) });
@@ -458,7 +462,8 @@ window.__ModuleLoader__.load({
         if (cur.status !== 'ready' || cur.random || cur.items.length >= cur.total || moreBusy.current) return;
         moreBusy.current = true; setLoadingMore(true);
         try {
-          const data = await call('search', { q, cat, fav: onlyFav, limit: PAGE, offset: cur.items.length });
+          const data = await call('search', { q, cat, fav: onlyFav, limit: PAGE, offset: cur.items.length,
+            shuffle: q ? undefined : true, seed: seedRef.current });
           setState((s) => ({ ...s, items: s.items.concat(data.items), total: data.total }));
         } catch { /* keep what we have; next scroll retries */ }
         finally { moreBusy.current = false; setLoadingMore(false); }

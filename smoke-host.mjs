@@ -44,6 +44,16 @@ expect('search item shape', typeof s1.items[0].code === 'string' && typeof s1.it
 const s2 = await wall.execute({ action: 'search', cat: '海报', limit: 3 });
 expect('cat filter works', s2.items.every((i) => i.catcn === '海报'));
 
+// seeded shuffle: same seed = same order (paging stays consistent), different seed = different order
+const sh1a = await wall.execute({ action: 'search', shuffle: true, seed: 12345, limit: 10, offset: 0 });
+const sh1b = await wall.execute({ action: 'search', shuffle: true, seed: 12345, limit: 10, offset: 0 });
+const sh2 = await wall.execute({ action: 'search', shuffle: true, seed: 999, limit: 10, offset: 0 });
+const sh1p2 = await wall.execute({ action: 'search', shuffle: true, seed: 12345, limit: 10, offset: 10 });
+expect('shuffle deterministic per seed', sh1a.items.map((i) => i.code).join() === sh1b.items.map((i) => i.code).join());
+expect('shuffle differs across seeds', sh1a.items.map((i) => i.code).join() !== sh2.items.map((i) => i.code).join());
+expect('shuffle paging has no overlap', !sh1a.items.some((i) => sh1p2.items.some((j) => j.code === i.code)));
+expect('shuffle covers full total', sh1a.total === 1077);
+
 // get a JSON-spec entry and adapt per target (find one dynamically)
 const jsonEntry = (await wall.execute({ action: 'search', q: 'poster', limit: 100 })).items.find((i) => i.shape === 'json')?.code
   ?? (await wall.execute({ action: 'search', limit: 200 })).items.find((i) => i.shape === 'json')?.code;

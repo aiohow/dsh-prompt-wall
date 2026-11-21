@@ -172,7 +172,7 @@ expect('detail shows raw prompt', joined.includes('a huge json spec'));
 // raw-prompt copy button present before any adaptation
 const copyBtns = created.filter((n) => n.type === 'button' && n.children.flat(Infinity).includes('detail.copy'));
 expect('raw prompt copy button rendered', copyBtns.length >= 1);
-expect('detail shows target buttons', joined.includes('qwen-image') && joined.includes('gpt-image') && joined.includes('h3-image') && joined.includes('generic'));
+expect('detail shows target buttons', joined.includes('qwen-image') && joined.includes('gpt-image') && joined.includes('h3-image') && joined.includes('target.generic'));
 
 // Fire adapt button
 const adaptBtn = created.find((n) => n.type === 'button' && textsOf([n]).includes('detail.adaptbtn'));

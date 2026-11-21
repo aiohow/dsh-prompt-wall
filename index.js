@@ -196,6 +196,23 @@ function buildIndex(entries) {
   }
 }
 
+function seededShuffle(arr, seed) {
+  // mulberry32: same seed => same order, so offset paging stays consistent.
+  let s = (seed >>> 0) || 1;
+  const rand = () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
 function searchEntries(entries, favs, args) {
   const q = String(args.q || "").trim().toLowerCase();
   const cat = String(args.cat || "").trim();
@@ -219,6 +236,7 @@ function searchEntries(entries, favs, args) {
       .sort((a, b) => b.score - a.score)
       .map((x) => x.e);
   }
+  if (args.shuffle === true && args.random !== true) list = seededShuffle(list, Number(args.seed) || 1);
   const total = list.length;
   if (args.random === true && total > 0) {
     // Fisher-Yates partial shuffle: pick `limit` distinct entries as an
