@@ -27,6 +27,8 @@ the right model format, and runs your image pipeline.
 - **Help page** — three-step onboarding for first-time users.
 - **Agent tools** — `prompt_wall` (search/get/categories/favorites) and
   `prompt_wall_adapt` (normalize a template for a target model).
+- **Shareable prompts** — a copied prompt works in any image tool; send it to
+  the friend who asks "how was this made?". No plugin needed on their side.
 
 ## Prompt adaptation
 
