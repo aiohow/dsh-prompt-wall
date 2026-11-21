@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "生图模板选片墙 (dsh-prompt-wall)",
+    "description": "左侧栏的提示词模板卡片墙：1126 条例图生图提示词随包分发，搜索 / 分类筛选 / 收藏，点开看原提示词并按目标模型（Qwen-Image、H3-Image、GPT Image、通用）一键适配——JSON 结构化规格自动提取画面描述、{argument} 参数槽自动填默认值，避免整坨 JSON 被文本渲染型模型画成文字墙。Agent 侧配 prompt_wall / prompt_wall_adapt 两个工具，对话里直接检索模板、取适配提示词。收藏存本机一个 JSON 文件，零出网。"
+  }
+}
